@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BangoPoints - Brand Manager Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/splide.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/css/splide.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: #1a1a1a;
+            --secondary-bg: #2d2d2d;
+            --accent-silver: #c0c0c0;
+            --light-grey: #e5e5e5;
+            --medium-grey: #404040;
+            --steel-blue: #4a90a4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --info: #3b82f6;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--light-grey);
+        }
+        
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .bg-pattern {
+            background-image: radial-gradient(circle at 1px 1px, rgba(192,192,192,0.1) 1px, transparent 0);
+            background-size: 20px 20px;
+        }
+        
+        .glass-effect {
+            background: rgba(45, 45, 45, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(192, 192, 192, 0.1);
+        }
+        
+        .silver-glow {
+            box-shadow: 0 0 20px rgba(192, 192, 192, 0.3);
+        }
+        
+        .hover-lift {
+            transition: all 0.3s ease;
+        }
+        
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(192, 192, 192, 0.2);
+        }
+        
+        .nav-bottom {
+            background: rgba(26, 26, 26, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(192, 192, 192, 0.1);
+        }
+        
+        .performance-card {
+            background: linear-gradient(135deg, rgba(45, 45, 45, 0.9) 0%, rgba(64, 64, 64, 0.8) 100%);
+            border: 1px solid rgba(192, 192, 192, 0.2);
+        }
+        
+        .metric-highlight {
+            background: linear-gradient(45deg, var(--steel-blue), var(--accent-silver));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .brand-logo {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--steel-blue), var(--accent-silver));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: var(--primary-bg);
+            font-weight: bold;
+        }
+        
+        .region-selector {
+            background: rgba(45, 45, 45, 0.9);
+            border: 1px solid rgba(192, 192, 192, 0.2);
+            color: var(--light-grey);
+        }
+        
+        .region-selector:focus {
+            border-color: var(--steel-blue);
+            box-shadow: 0 0 0 2px rgba(74, 144, 164, 0.2);
+        }
+        
+        .report-builder {
+            background: rgba(45, 45, 45, 0.9);
+            border: 1px solid rgba(192, 192, 192, 0.2);
+        }
+        
+        .invoice-preview {
+            background: rgba(26, 26, 26, 0.95);
+            border: 1px solid rgba(192, 192, 192, 0.3);
+        }
+        
+        .splide__track {
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .splide__slide {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--secondary-bg);
+            border: 1px solid rgba(192, 192, 192, 0.1);
+            border-radius: 8px;
+            margin: 0 8px;
+            padding: 16px;
+        }
+        
+        #particles-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body class="bg-pattern">
+    <div id="particles-bg"></div>
+    
+    <!-- Header -->
+    <header class="glass-effect sticky top-0 z-50 px-4 py-3">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <a href="index.html" class="p-2 rounded-lg hover:bg-medium-grey transition-colors">
+                    <svg class="w-5 h-5 text-accent-silver" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </a>
+                <h1 class="text-lg font-semibold text-light-grey">Brand Manager Portal</h1>
+            </div>
+            <div class="flex items-center space-x-3">
+                <select id="region-selector" class="region-selector px-3 py-2 rounded-lg text-sm focus:outline-none">
+                    <option value="east-africa">East Africa</option>
+                    <option value="west-africa">West Africa</option>
+                    <option value="south-africa">South Africa</option>
+                    <option value="north-africa">North Africa</option>
+                </select>
+                <button id="notifications-btn" class="relative p-2 rounded-lg hover:bg-medium-grey transition-colors">
+                    <svg class="w-5 h-5 text-accent-silver" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM11 17H6l5 5v-5zM7 7h10v10H7V7z"/>
+                    </svg>
+                    <span class="absolute -top-1 -right-1 w-4 h-4 bg-error rounded-full text-xs flex items-center justify-center text-white">3</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Brand Overview -->
+    <section class="px-4 py-6">
+        <div class="text-center mb-6">
+            <h2 class="text-2xl font-bold mb-2 metric-highlight">Brand Performance Dashboard</h2>
+            <p class="text-sm text-accent-silver">Monitor your brand's performance across regions</p>
+        </div>
+        
+        <!-- Brand Carousel -->
+        <div class="splide mb-6" id="brand-carousel">
+            <div class="splide__track">
+                <ul class="splide__list" id="brand-list">
+                    <!-- Brand cards will be dynamically generated -->
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Key Metrics -->
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <div class="performance-card rounded-xl p-4 hover-lift">
+                <div class="text-center">
+                    <div class="text-2xl font-bold font-mono metric-highlight" id="total-units">12,847</div>
+                    <div class="text-sm text-accent-silver">Units Sold</div>
+                    <div class="text-xs text-success mt-1">+15% this month</div>
+                </div>
+            </div>
+            <div class="performance-card rounded-xl p-4 hover-lift">
+                <div class="text-center">
+                    <div class="text-2xl font-bold font-mono metric-highlight" id="total-revenue">KES 2.8M</div>
+                    <div class="text-sm text-accent-silver">Revenue</div>
+                    <div class="text-xs text-success mt-1">+22% this month</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Performance Analytics -->
+    <section class="px-4 py-4">
+        <h3 class="text-lg font-semibold text-light-grey mb-4">Performance Analytics</h3>
+        <div class="performance-card rounded-xl p-4 mb-4">
+            <div id="performance-chart" class="h-64"></div>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4">
+            <div class="performance-card rounded-xl p-4">
+                <h4 class="text-sm font-semibold text-accent-silver mb-2">Top Performing Outlets</h4>
+                <div class="space-y-2" id="top-outlets">
+                    <!-- Top outlets will be populated here -->
+                </div>
+            </div>
+            <div class="performance-card rounded-xl p-4">
+                <h4 class="text-sm font-semibold text-accent-silver mb-2">Customer Demographics</h4>
+                <div id="demographics-chart" class="h-32"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Report Builder -->
+    <section class="px-4 py-4">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-light-grey">Custom Report Builder</h3>
+            <button id="save-report-template" class="px-3 py-2 bg-steel-blue rounded-lg text-sm font-medium hover:silver-glow transition-all">
+                Save Template
+            </button>
+        </div>
+        
+        <div class="report-builder rounded-xl p-4 mb-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-accent-silver mb-2">Report Type</label>
+                    <select id="report-type" class="region-selector w-full px-3 py-2 rounded-lg text-sm focus:outline-none">
+                        <option value="sales">Sales Report</option>
+                        <option value="performance">Performance Analysis</option>
+                        <option value="demographics">Customer Demographics</option>
+                        <option value="regional">Regional Analysis</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-accent-silver mb-2">Time Period</label>
+                    <select id="time-period" class="region-selector w-full px-3 py-2 rounded-lg text-sm focus:outline-none">
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="quarter">This Quarter</option>
+                        <option value="year">This Year</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-accent-silver mb-2">Age Group</label>
+                    <select id="age-group" class="region-selector w-full px-3 py-2 rounded-lg text-sm focus:outline-none">
+                        <option value="all">All Ages</option>
+                        <option value="15-25">15-25</option>
+                        <option value="26-35">26-35</option>
+                        <option value="36-45">36-45</option>
+                        <option value="46-55">46-55</option>
+                        <option value="56-65">56-65</option>
+                        <option value="66+">66+</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-accent-silver mb-2">Gender</label>
+                    <select id="gender" class="region-selector w-full px-3 py-2 rounded-lg text-sm focus:outline-none">
+                        <option value="all">All Genders</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-accent-silver mb-2">Customer Type</label>
+                    <select id="customer-type" class="region-selector w-full px-3 py-2 rounded-lg text-sm focus:outline-none">
+                        <option value="all">All Types</option>
+                        <option value="individual">Individual Consumer</option>
+                        <option value="shopkeeper">Shopkeeper</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="flex space-x-3">
+                <button id="generate-report" class="flex-1 px-4 py-3 bg-steel-blue rounded-lg font-medium hover:silver-glow transition-all">
+                    Generate Report
+                </button>
+                <button id="preview-report" class="flex-1 px-4 py-3 bg-medium-grey rounded-lg font-medium hover:bg-accent-silver hover:text-primary-bg transition-all">
+                    Preview Report
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Invoice Generation -->
+    <section class="px-4 py-4 mb-20">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-light-grey">Invoice Management</h3>
+            <div class="flex space-x-2">
+                <button id="download-invoice" class="px-3 py-2 bg-steel-blue rounded-lg text-sm font-medium hover:silver-glow transition-all">
+                    Download
+                </button>
+                <button id="email-invoice" class="px-3 py-2 bg-medium-grey rounded-lg text-sm font-medium hover:bg-accent-silver hover:text-primary-bg transition-all">
+                    Email Invoice
+                </button>
+            </div>
+        </div>
+        
+        <div class="invoice-preview rounded-xl p-6">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h4 class="text-lg font-semibold text-light-grey">Proforma Invoice</h4>
+                    <p class="text-sm text-accent-silver">Invoice #BPS-2025-001</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-sm text-accent-silver">Date: November 10, 2025</div>
+                    <div class="text-sm text-accent-silver">Due: November 17, 2025</div>
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <div class="text-sm text-accent-silver mb-2">Bill To:</div>
+                <div class="font-semibold text-light-grey">OMO Brand Manager</div>
+                <div class="text-sm text-accent-silver">East Africa Region</div>
+                <div class="text-sm text-accent-silver">Nairobi, Kenya</div>
+            </div>
+            
+            <div class="overflow-x-auto mb-6">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-medium-grey">
+                            <th class="text-left py-2 text-accent-silver">Description</th>
+                            <th class="text-right py-2 text-accent-silver">Quantity</th>
+                            <th class="text-right py-2 text-accent-silver">Rate (KES)</th>
+                            <th class="text-right py-2 text-accent-silver">Amount (KES)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b border-medium-grey/30">
+                            <td class="py-2 text-light-grey">OMO Units - Week 45</td>
+                            <td class="py-2 text-right text-light-grey font-mono">12,847</td>
+                            <td class="py-2 text-right text-light-grey font-mono">15.00</td>
+                            <td class="py-2 text-right text-light-grey font-mono">192,705.00</td>
+                        </tr>
+                        <tr class="border-b border-medium-grey/30">
+                            <td class="py-2 text-light-grey">Data Processing Fee</td>
+                            <td class="py-2 text-right text-light-grey font-mono">1</td>
+                            <td class="py-2 text-right text-light-grey font-mono">5,000.00</td>
+                            <td class="py-2 text-right text-light-grey font-mono">5,000.00</td>
+                        </tr>
+                        <tr class="border-b border-medium-grey/30">
+                            <td class="py-2 text-light-grey">Platform Service Fee</td>
+                            <td class="py-2 text-right text-light-grey font-mono">1</td>
+                            <td class="py-2 text-right text-light-grey font-mono">2,500.00</td>
+                            <td class="py-2 text-right text-light-grey font-mono">2,500.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="flex justify-end">
+                <div class="w-64">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-accent-silver">Subtotal:</span>
+                        <span class="font-mono text-light-grey">KES 200,205.00</span>
+                    </div>
+                    <div class="flex justify-between mb-2">
+                        <span class="text-accent-silver">VAT (16%):</span>
+                        <span class="font-mono text-light-grey">KES 32,032.80</span>
+                    </div>
+                    <div class="border-t border-medium-grey pt-2 flex justify-between">
+                        <span class="font-semibold text-light-grey">Total:</span>
+                        <span class="font-bold font-mono metric-highlight text-lg">KES 232,237.80</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bottom Navigation -->
+    <nav class="nav-bottom fixed bottom-0 left-0 right-0 px-4 py-3 z-50">
+        <div class="flex justify-around">
+            <a href="index.html" class="flex flex-col items-center space-y-1 text-accent-silver hover:text-steel-blue transition-colors">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                </svg>
+                <span class="text-xs">Dashboard</span>
+            </a>
+            <a href="performance.html" class="flex flex-col items-center space-y-1 text-accent-silver hover:text-steel-blue transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                <span class="text-xs">Performance</span>
+            </a>
+            <a href="receipts.html" class="flex flex-col items-center space-y-1 text-accent-silver hover:text-steel-blue transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span class="text-xs">Receipts</span>
+            </a>
+            <a href="brand-portal.html" class="flex flex-col items-center space-y-1 text-steel-blue">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6"/>
+                </svg>
+                <span class="text-xs">Brand Portal</span>
+            </a>
+        </div>
+    </nav>
+
+    <script>
+        // Brand Manager Portal JavaScript
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeBrandPortal();
+        });
+
+        function initializeBrandPortal() {
+            setupBrandCarousel();
+            initializePerformanceChart();
+            initializeDemographicsChart();
+            populateTopOutlets();
+            setupEventListeners();
+            initializeParticleBackground();
+            
+            // Animate page load
+            anime({
+                targets: '.performance-card, .brand-logo',
+                opacity: [0, 1],
+                translateY: [20, 0],
+                delay: anime.stagger(100),
+                duration: 800,
+                easing: 'easeOutQuart'
+            });
+        }
+
+        function setupBrandCarousel() {
+            const brands = [
+                { name: 'OMO', logo: '🧼', color: 'from-blue-500 to-blue-600' },
+                { name: 'Coca Cola', logo: '🥤', color: 'from-red-500 to-red-600' },
+                { name: 'Geisha', logo: '🧴', color: 'from-green-500 to-green-600' },
+                { name: 'Colgate', logo: '🦷', color: 'from-red-400 to-red-500' },
+                { name: 'Elianto', logo: '🛢️', color: 'from-yellow-500 to-yellow-600' },
+                { name: 'Nivea', logo: '🧴', color: 'from-blue-400 to-blue-500' },
+                { name: 'Kiwi', logo: '👞', color: 'from-brown-500 to-brown-600' },
+                { name: 'Lux', logo: '🧼', color: 'from-pink-500 to-pink-600' }
+            ];
+            
+            const brandList = document.getElementById('brand-list');
+            brandList.innerHTML = '';
+            
+            brands.forEach(brand => {
+                const brandCard = document.createElement('li');
+                brandCard.className = 'splide__slide cursor-pointer';
+                brandCard.onclick = () => selectBrand(brand.name);
+                
+                brandCard.innerHTML = `
+                    <div class="text-center">
+                        <div class="brand-logo bg-gradient-to-br ${brand.color} mx-auto mb-2">
+                            ${brand.logo}
+                        </div>
+                        <div class="font-semibold text-light-grey text-sm">${brand.name}</div>
+                        <div class="text-xs text-accent-silver mt-1">Active</div>
+                    </div>
+                `;
+                
+                brandList.appendChild(brandCard);
+            });
+            
+            // Initialize Splide carousel
+            new Splide('#brand-carousel', {
+                type: 'loop',
+                perPage: 4,
+                perMove: 1,
+                gap: '1rem',
+                pagination: false,
+                arrows: false,
+                autoplay: true,
+                interval: 3000,
+                breakpoints: {
+                    768: {
+                        perPage: 3,
+                    },
+                    480: {
+                        perPage: 2,
+                    }
+                }
+            }).mount();
+        }
+
+        function selectBrand(brandName) {
+            showToast(`Selected ${brandName} for detailed analysis`, 'info');
+            
+            // Update metrics based on brand
+            updateBrandMetrics(brandName);
+            
+            // Animate selection
+            anime({
+                targets: '.brand-logo',
+                scale: [1, 1.1, 1],
+                duration: 300,
+                easing: 'easeOutQuart'
+            });
+        }
+
+        function updateBrandMetrics(brandName) {
+            const brandData = {
+                'OMO': { units: 12847, revenue: 2800000 },
+                'Coca Cola': { units: 25600, revenue: 4200000 },
+                'Geisha': { units: 8900, revenue: 1800000 },
+                'Colgate': { units: 15200, revenue: 3200000 }
+            };
+            
+            const data = brandData[brandName] || { units: 12847, revenue: 2800000 };
+            
+            document.getElementById('total-units').textContent = data.units.toLocaleString();
+            document.getElementById('total-revenue').textContent = 'KES ' + (data.revenue / 1000000).toFixed(1) + 'M';
+        }
+
+        function initializePerformanceChart() {
+            const chartDom = document.getElementById('performance-chart');
+            const myChart = echarts.init(chartDom);
+            
+            const option = {
+                backgroundColor: 'transparent',
+                tooltip: {
+                    trigger: 'axis',
+                    backgroundColor: '#2d2d2d',
+                    borderColor: '#c0c0c0',
+                    textStyle: {
+                        color: '#e5e5e5'
+                    }
+                },
+                legend: {
+                    data: ['Units Sold', 'Revenue', 'Target'],
+                    textStyle: {
+                        color: '#c0c0c0'
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    boundaryGap: false,
+                    data: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                    axisLine: {
+                        lineStyle: {
+                            color: '#404040'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#c0c0c0'
+                    }
+                },
+                yAxis: [
+                    {
+                        type: 'value',
+                        name: 'Units',
+                        position: 'left',
+                        axisLine: {
+                            lineStyle: {
+                                color: '#404040'
+                            }
+                        },
+                        axisLabel: {
+                            color: '#c0c0c0'
+                        },
+                        splitLine: {
+                            lineStyle: {
+                                color: '#404040'
+                            }
+                        }
+                    },
+                    {
+                        type: 'value',
+                        name: 'Revenue (KES)',
+                        position: 'right',
+                        axisLine: {
+                            lineStyle: {
+                                color: '#404040'
+                            }
+                        },
+                        axisLabel: {
+                            color: '#c0c0c0',
+                            formatter: function(value) {
+                                return (value / 1000000).toFixed(1) + 'M';
+                            }
+                        }
+                    }
+                ],
+                series: [
+                    {
+                        name: 'Units Sold',
+                        type: 'bar',
+                        data: [3200, 4100, 3800, 3747],
+                        itemStyle: {
+                            color: '#4a90a4'
+                        }
+                    },
+                    {
+                        name: 'Revenue',
+                        type: 'line',
+                        yAxisIndex: 1,
+                        data: [680000, 890000, 820000, 810000],
+                        lineStyle: {
+                            color: '#10b981'
+                        },
+                        itemStyle: {
+                            color: '#10b981'
+                        }
+                    },
+                    {
+                        name: 'Target',
+                        type: 'line',
+                        data: [3000, 3000, 3000, 3000],
+                        lineStyle: {
+                            color: '#c0c0c0',
+                            type: 'dashed'
+                        },
+                        itemStyle: {
+                            color: '#c0c0c0'
+                        }
+                    }
+                ]
+            };
+            
+            myChart.setOption(option);
+            
+            window.addEventListener('resize', () => {
+                myChart.resize();
+            });
+        }
+
+        function initializeDemographicsChart() {
+            const chartDom = document.getElementById('demographics-chart');
+            const myChart = echarts.init(chartDom);
+            
+            const option = {
+                backgroundColor: 'transparent',
+                tooltip: {
+                    trigger: 'item',
+                    backgroundColor: '#2d2d2d',
+                    borderColor: '#c0c0c0',
+                    textStyle: {
+                        color: '#e5e5e5'
+                    }
+                },
+                series: [
+                    {
+                        type: 'pie',
+                        radius: ['40%', '70%'],
+                        center: ['50%', '50%'],
+                        data: [
+                            { value: 35, name: '15-25', itemStyle: { color: '#4a90a4' } },
+                            { value: 28, name: '26-35', itemStyle: { color: '#10b981' } },
+                            { value: 22, name: '36-45', itemStyle: { color: '#f59e0b' } },
+                            { value: 15, name: '46+', itemStyle: { color: '#c0c0c0' } }
+                        ],
+                        label: {
+                            color: '#e5e5e5',
+                            fontSize: 10
+                        },
+                        labelLine: {
+                            lineStyle: {
+                                color: '#c0c0c0'
+                            }
+                        }
+                    }
+                ]
+            };
+            
+            myChart.setOption(option);
+            
+            window.addEventListener('resize', () => {
+                myChart.resize();
+            });
+        }
+
+        function populateTopOutlets() {
+            const outlets = [
+                { name: 'Naivas Garissa', sales: 2450, growth: '+12%' },
+                { name: 'Carrefour Two Rivers', sales: 2100, growth: '+8%' },
+                { name: 'Quickmart CBD', sales: 1850, growth: '+15%' },
+                { name: 'Chandarana Westlands', sales: 1650, growth: '+5%' },
+                { name: 'Tuskys Mombasa', sales: 1420, growth: '+18%' }
+            ];
+            
+            const container = document.getElementById('top-outlets');
+            container.innerHTML = '';
+            
+            outlets.forEach(outlet => {
+                const outletElement = document.createElement('div');
+                outletElement.className = 'flex justify-between items-center py-1';
+                
+                outletElement.innerHTML = `
+                    <div>
+                        <div class="text-sm text-light-grey">${outlet.name}</div>
+                        <div class="text-xs text-accent-silver">${outlet.sales} units</div>
+                    </div>
+                    <div class="text-xs text-success">${outlet.growth}</div>
+                `;
+                
+                container.appendChild(outletElement);
+            });
+        }
+
+        function setupEventListeners() {
+            const regionSelector = document.getElementById('region-selector');
+            const generateReportBtn = document.getElementById('generate-report');
+            const previewReportBtn = document.getElementById('preview-report');
+            const saveTemplateBtn = document.getElementById('save-report-template');
+            const downloadInvoiceBtn = document.getElementById('download-invoice');
+            const emailInvoiceBtn = document.getElementById('email-invoice');
+            
+            regionSelector.addEventListener('change', (e) => {
+                updateRegionData(e.target.value);
+            });
+            
+            generateReportBtn.addEventListener('click', generateCustomReport);
+            previewReportBtn.addEventListener('click', previewCustomReport);
+            saveTemplateBtn.addEventListener('click', saveReportTemplate);
+            downloadInvoiceBtn.addEventListener('click', downloadInvoice);
+            emailInvoiceBtn.addEventListener('click', emailInvoice);
+        }
+
+        function updateRegionData(region) {
+            showToast(`Switched to ${region.replace('-', ' ')} region`, 'info');
+            
+            // Update metrics based on region
+            const regionData = {
+                'east-africa': { units: 12847, revenue: 2800000 },
+                'west-africa': { units: 8900, revenue: 1900000 },
+                'south-africa': { units: 15200, revenue: 3400000 },
+                'north-africa': { units: 6700, revenue: 1500000 }
+            };
+            
+            const data = regionData[region] || regionData['east-africa'];
+            document.getElementById('total-units').textContent = data.units.toLocaleString();
+            document.getElementById('total-revenue').textContent = 'KES ' + (data.revenue / 1000000).toFixed(1) + 'M';
+            
+            // Animate metrics update
+            anime({
+                targets: '.metric-highlight',
+                scale: [1.1, 1],
+                duration: 500,
+                easing: 'easeOutQuart'
+            });
+        }
+
+        function generateCustomReport() {
+            const reportType = document.getElementById('report-type').value;
+            const timePeriod = document.getElementById('time-period').value;
+            const ageGroup = document.getElementById('age-group').value;
+            const gender = document.getElementById('gender').value;
+            const customerType = document.getElementById('customer-type').value;
+            
+            showToast('Generating custom report...', 'info');
+            
+            // Simulate report generation
+            setTimeout(() => {
+                showToast('Custom report generated successfully', 'success');
+                showReportPreview({
+                    reportType,
+                    timePeriod,
+                    ageGroup,
+                    gender,
+                    customerType
+                });
+            }, 2000);
+        }
+
+        function previewCustomReport() {
+            const reportType = document.getElementById('report-type').value;
+            const timePeriod = document.getElementById('time-period').value;
+            
+            showToast('Opening report preview...', 'info');
+            showReportPreview({
+                reportType,
+                timePeriod,
+                preview: true
+            });
+        }
+
+        function showReportPreview(config) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center px-4';
+            modal.innerHTML = `
+                <div class="glass-effect rounded-xl p-6 w-full max-w-4xl max-h-[80vh] overflow-y-auto">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-light-grey">Report Preview</h3>
+                        <button onclick="this.closest('.fixed').remove()" class="text-accent-silver hover:text-light-grey">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="performance-card rounded-lg p-4">
+                            <h4 class="font-semibold text-light-grey mb-2">${config.reportType.toUpperCase()} REPORT</h4>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <span class="text-accent-silver">Period:</span>
+                                    <span class="text-light-grey ml-2">${config.timePeriod}</span>
+                                </div>
+                                <div>
+                                    <span class="text-accent-silver">Age Group:</span>
+                                    <span class="text-light-grey ml-2">${config.ageGroup || 'All'}</span>
+                                </div>
+                                <div>
+                                    <span class="text-accent-silver">Gender:</span>
+                                    <span class="text-light-grey ml-2">${config.gender || 'All'}</span>
+                                </div>
+                                <div>
+                                    <span class="text-accent-silver">Customer Type:</span>
+                                    <span class="text-light-grey ml-2">${config.customerType || 'All'}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="performance-card rounded-lg p-4">
+                            <h4 class="font-semibold text-light-grey mb-3">Summary Metrics</h4>
+                            <div class="grid grid-cols-3 gap-4 text-center">
+                                <div>
+                                    <div class="text-2xl font-bold font-mono metric-highlight">12,847</div>
+                                    <div class="text-xs text-accent-silver">Units Sold</div>
+                                </div>
+                                <div>
+                                    <div class="text-2xl font-bold font-mono metric-highlight">KES 2.8M</div>
+                                    <div class="text-xs text-accent-silver">Revenue</div>
+                                </div>
+                                <div>
+                                    <div class="text-2xl font-bold font-mono text-success">+15%</div>
+                                    <div class="text-xs text-accent-silver">Growth</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="performance-card rounded-lg p-4">
+                            <h4 class="font-semibold text-light-grey mb-3">Detailed Breakdown</h4>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-accent-silver">Nairobi Region:</span>
+                                    <span class="text-light-grey font-mono">4,521 units</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-accent-silver">Mombasa Region:</span>
+                                    <span class="text-light-grey font-mono">3,892 units</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-accent-silver">Kisumu Region:</span>
+                                    <span class="text-light-grey font-mono">2,756 units</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-accent-silver">Other Regions:</span>
+                                    <span class="text-light-grey font-mono">1,678 units</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex space-x-3 mt-6">
+                        <button onclick="downloadReport()" 
+                                class="flex-1 px-4 py-2 bg-steel-blue rounded-lg text-sm font-medium hover:silver-glow transition-all">
+                            Download PDF
+                        </button>
+                        <button onclick="emailReport()" 
+                                class="flex-1 px-4 py-2 bg-medium-grey rounded-lg text-sm font-medium hover:bg-accent-silver hover:text-primary-bg transition-all">
+                            Email Report
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Animate modal appearance
+            anime({
+                targets: modal.querySelector('.glass-effect'),
+                opacity: [0, 1],
+                scale: [0.9, 1],
+                duration: 300,
+                easing: 'easeOutQuart'
+            });
+        }
+
+        function downloadReport() {
+            showToast('Downloading report...', 'info');
+            // Simulate download
+        }
+
+        function emailReport() {
+            showToast('Report sent via email', 'success');
+        }
+
+        function saveReportTemplate() {
+            showToast('Report template saved', 'success');
+        }
+
+        function downloadInvoice() {
+            showToast('Downloading invoice...', 'info');
+            // Simulate PDF download
+        }
+
+        function emailInvoice() {
+            showToast('Invoice sent to brand manager', 'success');
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-20 right-4 px-4 py-3 rounded-lg text-white text-sm font-medium z-50 ${
+                type === 'success' ? 'bg-success' :
+                type === 'warning' ? 'bg-warning' :
+                type === 'error' ? 'bg-error' : 'bg-info'
+            }`;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            anime({
+                targets: toast,
+                opacity: [0, 1],
+                translateX: [100, 0],
+                duration: 300,
+                easing: 'easeOutQuart'
+            });
+            
+            setTimeout(() => {
+                anime({
+                    targets: toast,
+                    opacity: [1, 0],
+                    translateX: [0, 100],
+                    duration: 300,
+                    easing: 'easeInQuart',
+                    complete: () => toast.remove()
+                });
+            }, 3000);
+        }
+
+        function initializeParticleBackground() {
+            new p5((p) => {
+                let particles = [];
+                
+                p.setup = function() {
+                    const canvas = p.createCanvas(p.windowWidth, p.windowHeight);
+                    canvas.parent('particles-bg');
+                    
+                    for (let i = 0; i < 40; i++) {
+                        particles.push({
+                            x: p.random(p.width),
+                            y: p.random(p.height),
+                            vx: p.random(-0.3, 0.3),
+                            vy: p.random(-0.3, 0.3),
+                            size: p.random(1, 3)
+                        });
+                    }
+                };
+                
+                p.draw = function() {
+                    p.clear();
+                    
+                    particles.forEach(particle => {
+                        particle.x += particle.vx;
+                        particle.y += particle.vy;
+                        
+                        if (particle.x < 0) particle.x = p.width;
+                        if (particle.x > p.width) particle.x = 0;
+                        if (particle.y < 0) particle.y = p.height;
+                        if (particle.y > p.height) particle.y = 0;
+                        
+                        p.fill(192, 192, 192, 70);
+                        p.noStroke();
+                        p.circle(particle.x, particle.y, particle.size);
+                    });
+                    
+                    // Draw connections between nearby particles
+                    particles.forEach((particle, i) => {
+                        particles.slice(i + 1).forEach(other => {
+                            const distance = p.dist(particle.x, particle.y, other.x, other.y);
+                            if (distance < 80) {
+                                p.stroke(192, 192, 192, 30 * (1 - distance / 80));
+                                p.strokeWeight(0.5);
+                                p.line(particle.x, particle.y, other.x, other.y);
+                            }
+                        });
+                    });
+                };
+                
+                p.windowResized = function() {
+                    p.resizeCanvas(p.windowWidth, p.windowHeight);
+                };
+            });
+        }
+    </script>
+</body>
+</html>

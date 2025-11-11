@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management - Bangopoints</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass-effect { 
+            background: rgba(30, 30, 30, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .hover-lift { transition: transform 0.3s ease; }
+        .hover-lift:hover { transform: translateY(-2px); }
+        .gradient-text {
+            background: linear-gradient(135deg, #c0c0c0, #ffffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .bottom-nav { 
+            background: rgba(20, 20, 20, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .nav-item { transition: all 0.3s ease; }
+        .nav-item:hover { color: #c0c0c0; }
+        .nav-item.active { color: #ffffff; }
+        .user-card { 
+            background: linear-gradient(135deg, rgba(40, 40, 40, 0.8), rgba(60, 60, 60, 0.6));
+            border: 1px solid rgba(192, 192, 192, 0.2);
+        }
+        .role-badge {
+            background: linear-gradient(135deg, #4a5568, #2d3748);
+            color: #e2e8f0;
+        }
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <!-- Header -->
+    <header class="glass-effect p-4 sticky top-0 z-40">
+        <div class="flex items-center justify-between max-w-6xl mx-auto">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 bg-gradient-to-r from-gray-400 to-white rounded-lg flex items-center justify-center">
+                    <span class="text-gray-900 font-bold text-sm">BP</span>
+                </div>
+                <h1 class="text-lg font-semibold gradient-text">Bangopoints</h1>
+            </div>
+            <div class="flex items-center space-x-3">
+                <span class="text-sm text-gray-400">Admin Panel</span>
+                <button id="logout-btn" class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded-lg text-sm transition-colors">
+                    Logout
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="p-4 pb-20 max-w-6xl mx-auto">
+        <!-- Page Header -->
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold mb-2 gradient-text">User Management</h2>
+            <p class="text-gray-400 text-sm">Manage users, roles, and permissions across all regions</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="glass-effect rounded-xl p-4 hover-lift">
+                <div class="text-2xl font-bold text-blue-400" id="total-users">0</div>
+                <div class="text-xs text-gray-400">Total Users</div>
+            </div>
+            <div class="glass-effect rounded-xl p-4 hover-lift">
+                <div class="text-2xl font-bold text-green-400" id="active-users">0</div>
+                <div class="text-xs text-gray-400">Active Today</div>
+            </div>
+            <div class="glass-effect rounded-xl p-4 hover-lift">
+                <div class="text-2xl font-bold text-purple-400" id="admins-count">0</div>
+                <div class="text-xs text-gray-400">Admins</div>
+            </div>
+            <div class="glass-effect rounded-xl p-4 hover-lift">
+                <div class="text-2xl font-bold text-yellow-400" id="pending-approvals">0</div>
+                <div class="text-xs text-gray-400">Pending</div>
+            </div>
+        </div>
+
+        <!-- Filters and Search -->
+        <div class="glass-effect rounded-xl p-4 mb-6">
+            <div class="flex flex-col md:flex-row gap-4">
+                <div class="flex-1">
+                    <input type="text" id="search-users" placeholder="Search users by name, email, or ID..." 
+                           class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:border-gray-500 focus:outline-none">
+                </div>
+                <div class="flex gap-2">
+                    <select id="role-filter" class="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-gray-500 focus:outline-none">
+                        <option value="">All Roles</option>
+                        <option value="admin">Admin</option>
+                        <option value="brand-manager">Brand Manager</option>
+                        <option value="finance">Finance Manager</option>
+                        <option value="ppg">PPG</option>
+                        <option value="beo">BEO</option>
+                        <option value="shopper">Shopper</option>
+                    </select>
+                    <select id="region-filter" class="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-gray-500 focus:outline-none">
+                        <option value="">All Regions</option>
+                        <option value="east-africa">East Africa</option>
+                        <option value="west-africa">West Africa</option>
+                        <option value="south-africa">South Africa</option>
+                        <option value="north-africa">North Africa</option>
+                    </select>
+                    <button id="add-user-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white transition-colors">
+                        Add User
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6" id="users-grid">
+            <!-- User cards will be dynamically generated here -->
+        </div>
+
+        <!-- Pagination -->
+        <div class="flex justify-center items-center space-x-2 mb-6">
+            <button id="prev-page" class="px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                Previous
+            </button>
+            <span id="page-info" class="text-sm text-gray-400">Page 1 of 1</span>
+            <button id="next-page" class="px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                Next
+            </button>
+        </div>
+    </main>
+
+    <!-- Add/Edit User Modal -->
+    <div id="user-modal" class="fixed inset-0 modal-backdrop hidden z-50 flex items-center justify-center p-4">
+        <div class="glass-effect rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold gradient-text" id="modal-title">Add New User</h3>
+                    <button id="close-modal" class="text-gray-400 hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <form id="user-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Full Name *</label>
+                        <input type="text" id="user-name" required 
+                               class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-gray-500 focus:outline-none">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Email *</label>
+                        <input type="email" id="user-email" required 
+                               class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-gray-500 focus:outline-none">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Phone</label>
+                        <input type="tel" id="user-phone" 
+                               class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-gray-500 focus:outline-none">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Role *</label>
+                        <select id="user-role" required 
+                                class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-gray-500 focus:outline-none">
+                            <option value="">Select Role</option>
+                            <option value="admin">Admin</option>
+                            <option value="brand-manager">Brand Manager</option>
+                            <option value="finance">Finance Manager</option>
+                            <option value="ppg">PPG</option>
+                            <option value="beo">BEO</option>
+                            <option value="shopper">Shopper</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Region *</label>
+                        <select id="user-region" required 
+                                class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-gray-500 focus:outline-none">
+                            <option value="">Select Region</option>
+                            <option value="east-africa">East Africa</option>
+                            <option value="west-africa">West Africa</option>
+                            <option value="south-africa">South Africa</option>
+                            <option value="north-africa">North Africa</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Department</label>
+                        <input type="text" id="user-department" 
+                               class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-gray-500 focus:outline-none">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Status</label>
+                        <select id="user-status" 
+                                class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-gray-500 focus:outline-none">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="pending">Pending Approval</option>
+                        </select>
+                    </div>
+                    
+                    <div id="password-field" class="hidden">
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Temporary Password *</label>
+                        <input type="password" id="user-password" 
+                               class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-gray-500 focus:outline-none">
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3 pt-4">
+                        <button type="button" id="cancel-btn" 
+                                class="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg text-white transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white transition-colors">
+                            Save User
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Details Modal -->
+    <div id="user-details-modal" class="fixed inset-0 modal-backdrop hidden z-50 flex items-center justify-center p-4">
+        <div class="glass-effect rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold gradient-text">User Details</h3>
+                    <button id="close-details-modal" class="text-gray-400 hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div id="user-details-content">
+                    <!-- User details will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav fixed bottom-0 left-0 right-0 p-4 z-30">
+        <div class="flex justify-around items-center max-w-md mx-auto">
+            <a href="index.html" class="nav-item flex flex-col items-center text-xs">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z"></path>
+                </svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="performance.html" class="nav-item flex flex-col items-center text-xs">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+                <span>Performance</span>
+            </a>
+            <a href="receipts.html" class="nav-item flex flex-col items-center text-xs">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <span>Receipts</span>
+            </a>
+            <a href="brand-portal.html" class="nav-item flex flex-col items-center text-xs">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                </svg>
+                <span>Brands</span>
+            </a>
+            <a href="user-management.html" class="nav-item active flex flex-col items-center text-xs">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                </svg>
+                <span>Users</span>
+            </a>
+        </div>
+    </nav>
+
+    <script src="main.js"></script>
+    <script>
+        // User Management specific functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeUserManagement();
+        });
+
+        function initializeUserManagement() {
+            loadUsers();
+            setupEventListeners();
+            updateStats();
+        }
+
+        function loadUsers() {
+            const users = getUsers();
+            renderUsers(users);
+        }
+
+        function getUsers() {
+            const defaultUsers = [
+                {
+                    id: 'U001',
+                    name: 'Sarah Johnson',
+                    email: 'sarah.johnson@bangopoints.com',
+                    phone: '+254 712 345 678',
+                    role: 'admin',
+                    region: 'east-africa',
+                    department: 'Operations',
+                    status: 'active',
+                    createdAt: '2024-01-15',
+                    lastLogin: '2024-11-11',
+                    permissions: ['all']
+                },
+                {
+                    id: 'U002',
+                    name: 'Michael Chen',
+                    email: 'michael.chen@bangopoints.com',
+                    phone: '+234 803 456 7890',
+                    role: 'brand-manager',
+                    region: 'west-africa',
+                    department: 'Brand Management',
+                    status: 'active',
+                    createdAt: '2024-02-01',
+                    lastLogin: '2024-11-10',
+                    permissions: ['brands', 'reports', 'invoicing']
+                },
+                {
+                    id: 'U003',
+                    name: 'Fatima Al-Hassan',
+                    email: 'fatima.alhassan@bangopoints.com',
+                    phone: '+27 82 123 4567',
+                    role: 'finance',
+                    region: 'south-africa',
+                    department: 'Finance',
+                    status: 'active',
+                    createdAt: '2024-01-20',
+                    lastLogin: '2024-11-11',
+                    permissions: ['finance', 'reports', 'invoicing']
+                },
+                {
+                    id: 'U004',
+                    name: 'Ahmed Mohamed',
+                    email: 'ahmed.mohamed@bangopoints.com',
+                    phone: '+20 100 234 5678',
+                    role: 'ppg',
+                    region: 'north-africa',
+                    department: 'Field Operations',
+                    status: 'active',
+                    createdAt: '2024-03-01',
+                    lastLogin: '2024-11-09',
+                    permissions: ['performance', 'receipts']
+                },
+                {
+                    id: 'U005',
+                    name: 'Grace Okafor',
+                    email: 'grace.okafor@bangopoints.com',
+                    phone: '+234 816 789 0123',
+                    role: 'beo',
+                    region: 'west-africa',
+                    department: 'Business Development',
+                    status: 'pending',
+                    createdAt: '2024-11-01',
+                    lastLogin: null,
+                    permissions: ['receipts', 'bd-leads']
+                },
+                {
+                    id: 'U006',
+                    name: 'James Kiprotich',
+                    email: 'james.kiprotich@bangopoints.com',
+                    phone: '+254 722 890 1234',
+                    role: 'shopper',
+                    region: 'east-africa',
+                    department: 'Customer',
+                    status: 'active',
+                    createdAt: '2024-02-15',
+                    lastLogin: '2024-11-11',
+                    permissions: ['rewards', 'points']
+                }
+            ];
+            
+            return JSON.parse(localStorage.getItem('bangopoints_users')) || defaultUsers;
+        }
+
+        function saveUsers(users) {
+            localStorage.setItem('bangopoints_users', JSON.stringify(users));
+        }
+
+        function renderUsers(users) {
+            const grid = document.getElementById('users-grid');
+            grid.innerHTML = '';
+
+            users.forEach(user => {
+                const userCard = createUserCard(user);
+                grid.appendChild(userCard);
+            });
+
+            // Animate cards
+            anime({
+                targets: '.user-card',
+                opacity: [0, 1],
+                translateY: [20, 0],
+                delay: anime.stagger(100),
+                duration: 600,
+                easing: 'easeOutQuart'
+            });
+        }
+
+        function createUserCard(user) {
+            const card = document.createElement('div');
+            card.className = 'user-card rounded-xl p-4 hover-lift cursor-pointer';
+            
+            const statusColor = {
+                'active': 'bg-green-600',
+                'inactive': 'bg-red-600',
+                'pending': 'bg-yellow-600'
+            }[user.status] || 'bg-gray-600';
+
+            const roleColor = {
+                'admin': 'bg-purple-600',
+                'brand-manager': 'bg-blue-600',
+                'finance': 'bg-green-600',
+                'ppg': 'bg-orange-600',
+                'beo': 'bg-teal-600',
+                'shopper': 'bg-pink-600'
+            }[user.role] || 'bg-gray-600';
+
+            card.innerHTML = `
+                <div class="flex items-start justify-between mb-3">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 bg-gradient-to-r from-gray-400 to-white rounded-full flex items-center justify-center">
+                            <span class="text-gray-900 font-bold text-sm">${user.name.split(' ').map(n => n[0]).join('')}</span>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-white">${user.name}</h3>
+                            <p class="text-xs text-gray-400">${user.id}</p>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="editUser('${user.id}')" class="text-blue-400 hover:text-blue-300 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                        </button>
+                        <button onclick="deleteUser('${user.id}')" class="text-red-400 hover:text-red-300 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-gray-400">Role</span>
+                        <span class="role-badge px-2 py-1 rounded-full text-xs font-medium ${roleColor}">${formatRole(user.role)}</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-gray-400">Region</span>
+                        <span class="text-xs text-gray-300">${formatRegion(user.region)}</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-gray-400">Status</span>
+                        <span class="px-2 py-1 rounded-full text-xs font-medium ${statusColor}">${formatStatus(user.status)}</span>
+                    </div>
+                    
+                    <div class="pt-2 border-t border-gray-700">
+                        <p class="text-xs text-gray-400 mb-1">${user.email}</p>
+                        <p class="text-xs text-gray-400">${user.phone}</p>
+                    </div>
+                    
+                    <div class="flex items-center justify-between text-xs text-gray-500">
+                        <span>Created: ${formatDate(user.createdAt)}</span>
+                        <span>Last: ${user.lastLogin ? formatDate(user.lastLogin) : 'Never'}</span>
+                    </div>
+                </div>
+            `;
+
+            card.onclick = (e) => {
+                if (!e.target.closest('button')) {
+                    showUserDetails(user);
+                }
+            };
+
+            return card;
+        }
+
+        function formatRole(role) {
+            const roles = {
+                'admin': 'Administrator',
+                'brand-manager': 'Brand Manager',
+                'finance': 'Finance Manager',
+                'ppg': 'PPG',
+                'beo': 'BEO',
+                'shopper': 'Shopper'
+            };
+            return roles[role] || role;
+        }
+
+        function formatRegion(region) {
+            const regions = {
+                'east-africa': 'East Africa',
+                'west-africa': 'West Africa',
+                'south-africa': 'South Africa',
+                'north-africa': 'North Africa'
+            };
+            return regions[region] || region;
+        }
+
+        function formatStatus(status) {
+            const statuses = {
+                'active': 'Active',
+                'inactive': 'Inactive',
+                'pending': 'Pending'
+            };
+            return statuses[status] || status;
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        function updateStats() {
+            const users = getUsers();
+            const today = new Date().toDateString();
+            
+            document.getElementById('total-users').textContent = users.length;
+            document.getElementById('active-users').textContent = users.filter(u => u.lastLogin && new Date(u.lastLogin).toDateString() === today).length;
+            document.getElementById('admins-count').textContent = users.filter(u => u.role === 'admin').length;
+            document.getElementById('pending-approvals').textContent = users.filter(u => u.status === 'pending').length;
+        }
+
+        function setupEventListeners() {
+            // Add user button
+            document.getElementById('add-user-btn').onclick = () => openUserModal();
+            
+            // Modal close buttons
+            document.getElementById('close-modal').onclick = () => closeUserModal();
+            document.getElementById('close-details-modal').onclick = () => closeDetailsModal();
+            
+            // Form submission
+            document.getElementById('user-form').onsubmit = (e) => {
+                e.preventDefault();
+                saveUser();
+            };
+            
+            // Cancel button
+            document.getElementById('cancel-btn').onclick = () => closeUserModal();
+            
+            // Filters
+            document.getElementById('search-users').oninput = filterUsers;
+            document.getElementById('role-filter').onchange = filterUsers;
+            document.getElementById('region-filter').onchange = filterUsers;
+            
+            // Logout
+            document.getElementById('logout-btn').onclick = logout;
+        }
+
+        function openUserModal(user = null) {
+            const modal = document.getElementById('user-modal');
+            const title = document.getElementById('modal-title');
+            const passwordField = document.getElementById('password-field');
+            
+            if (user) {
+                title.textContent = 'Edit User';
+                passwordField.classList.add('hidden');
+                populateForm(user);
+            } else {
+                title.textContent = 'Add New User';
+                passwordField.classList.remove('hidden');
+                document.getElementById('user-form').reset();
+            }
+            
+            modal.classList.remove('hidden');
+        }
+
+        function closeUserModal() {
+            document.getElementById('user-modal').classList.add('hidden');
+            document.getElementById('user-form').reset();
+        }
+
+        function closeDetailsModal() {
+            document.getElementById('user-details-modal').classList.add('hidden');
+        }
+
+        function populateForm(user) {
+            document.getElementById('user-name').value = user.name;
+            document.getElementById('user-email').value = user.email;
+            document.getElementById('user-phone').value = user.phone || '';
+            document.getElementById('user-role').value = user.role;
+            document.getElementById('user-region').value = user.region;
+            document.getElementById('user-department').value = user.department || '';
+            document.getElementById('user-status').value = user.status;
+        }
+
+        function saveUser() {
+            const users = getUsers();
+            const isEdit = document.getElementById('modal-title').textContent === 'Edit User';
+            
+            const userData = {
+                id: isEdit ? users.find(u => u.email === document.getElementById('user-email').value)?.id : 'U' + String(users.length + 1).padStart(3, '0'),
+                name: document.getElementById('user-name').value,
+                email: document.getElementById('user-email').value,
+                phone: document.getElementById('user-phone').value,
+                role: document.getElementById('user-role').value,
+                region: document.getElementById('user-region').value,
+                department: document.getElementById('user-department').value,
+                status: document.getElementById('user-status').value,
+                createdAt: isEdit ? users.find(u => u.email === document.getElementById('user-email').value)?.createdAt : new Date().toISOString().split('T')[0],
+                lastLogin: null
+            };
+            
+            if (isEdit) {
+                const index = users.findIndex(u => u.email === userData.email);
+                if (index !== -1) {
+                    users[index] = { ...users[index], ...userData };
+                }
+            } else {
+                users.push(userData);
+            }
+            
+            saveUsers(users);
+            closeUserModal();
+            loadUsers();
+            updateStats();
+            showToast(isEdit ? 'User updated successfully' : 'User created successfully');
+        }
+
+        function editUser(userId) {
+            const users = getUsers();
+            const user = users.find(u => u.id === userId);
+            if (user) {
+                openUserModal(user);
+            }
+        }
+
+        function deleteUser(userId) {
+            if (confirm('Are you sure you want to delete this user?')) {
+                const users = getUsers();
+                const filteredUsers = users.filter(u => u.id !== userId);
+                saveUsers(filteredUsers);
+                loadUsers();
+                updateStats();
+                showToast('User deleted successfully');
+            }
+        }
+
+        function showUserDetails(user) {
+            const modal = document.getElementById('user-details-modal');
+            const content = document.getElementById('user-details-content');
+            
+            content.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-semibold text-gray-300 mb-3">Personal Information</h4>
+                        <div class="space-y-2">
+                            <div><span class="text-gray-400">Name:</span> ${user.name}</div>
+                            <div><span class="text-gray-400">Email:</span> ${user.email}</div>
+                            <div><span class="text-gray-400">Phone:</span> ${user.phone || 'N/A'}</div>
+                            <div><span class="text-gray-400">User ID:</span> ${user.id}</div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold text-gray-300 mb-3">Account Information</h4>
+                        <div class="space-y-2">
+                            <div><span class="text-gray-400">Role:</span> ${formatRole(user.role)}</div>
+                            <div><span class="text-gray-400">Region:</span> ${formatRegion(user.region)}</div>
+                            <div><span class="text-gray-400">Department:</span> ${user.department || 'N/A'}</div>
+                            <div><span class="text-gray-400">Status:</span> ${formatStatus(user.status)}</div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold text-gray-300 mb-3">Timeline</h4>
+                        <div class="space-y-2">
+                            <div><span class="text-gray-400">Created:</span> ${formatDate(user.createdAt)}</div>
+                            <div><span class="text-gray-400">Last Login:</span> ${user.lastLogin ? formatDate(user.lastLogin) : 'Never'}</div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold text-gray-300 mb-3">Permissions</h4>
+                        <div class="flex flex-wrap gap-2">
+                            ${user.permissions.map(permission => 
+                                `<span class="px-2 py-1 bg-blue-600 text-xs rounded-full">${permission}</span>`
+                            ).join('')}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-700">
+                    <button onclick="editUser('${user.id}')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white transition-colors">
+                        Edit User
+                    </button>
+                    <button onclick="deleteUser('${user.id}')" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white transition-colors">
+                        Delete User
+                    </button>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+        }
+
+        function filterUsers() {
+            const searchTerm = document.getElementById('search-users').value.toLowerCase();
+            const roleFilter = document.getElementById('role-filter').value;
+            const regionFilter = document.getElementById('region-filter').value;
+            
+            const users = getUsers().filter(user => {
+                const matchesSearch = user.name.toLowerCase().includes(searchTerm) || 
+                                    user.email.toLowerCase().includes(searchTerm) ||
+                                    user.id.toLowerCase().includes(searchTerm);
+                const matchesRole = !roleFilter || user.role === roleFilter;
+                const matchesRegion = !regionFilter || user.region === regionFilter;
+                
+                return matchesSearch && matchesRole && matchesRegion;
+            });
+            
+            renderUsers(users);
+        }
+
+        function logout() {
+            localStorage.removeItem('bangopoints_current_user');
+            window.location.href = 'login.html';
+        }
+
+        function showToast(message) {
+            // Simple toast notification
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg z-50';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

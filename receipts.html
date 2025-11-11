@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BangoPoints - Receipt Processing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: #1a1a1a;
+            --secondary-bg: #2d2d2d;
+            --accent-silver: #c0c0c0;
+            --light-grey: #e5e5e5;
+            --medium-grey: #404040;
+            --steel-blue: #4a90a4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --info: #3b82f6;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--light-grey);
+        }
+        
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .bg-pattern {
+            background-image: radial-gradient(circle at 1px 1px, rgba(192,192,192,0.1) 1px, transparent 0);
+            background-size: 20px 20px;
+        }
+        
+        .glass-effect {
+            background: rgba(45, 45, 45, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(192, 192, 192, 0.1);
+        }
+        
+        .silver-glow {
+            box-shadow: 0 0 20px rgba(192, 192, 192, 0.3);
+        }
+        
+        .hover-lift {
+            transition: all 0.3s ease;
+        }
+        
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(192, 192, 192, 0.2);
+        }
+        
+        .nav-bottom {
+            background: rgba(26, 26, 26, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(192, 192, 192, 0.1);
+        }
+        
+        .performance-card {
+            background: linear-gradient(135deg, rgba(45, 45, 45, 0.9) 0%, rgba(64, 64, 64, 0.8) 100%);
+            border: 1px solid rgba(192, 192, 192, 0.2);
+        }
+        
+        .metric-highlight {
+            background: linear-gradient(45deg, var(--steel-blue), var(--accent-silver));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .upload-area {
+            border: 2px dashed rgba(192, 192, 192, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .upload-area:hover {
+            border-color: var(--steel-blue);
+            background-color: rgba(74, 144, 164, 0.1);
+        }
+        
+        .upload-area.dragover {
+            border-color: var(--steel-blue);
+            background-color: rgba(74, 144, 164, 0.2);
+        }
+        
+        .receipt-item {
+            border-left: 4px solid var(--steel-blue);
+        }
+        
+        .participating-item {
+            background: rgba(16, 185, 129, 0.1);
+            border-left: 4px solid var(--success);
+        }
+        
+        .non-participating-item {
+            background: rgba(245, 158, 11, 0.1);
+            border-left: 4px solid var(--warning);
+        }
+        
+        .flagged-item {
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 4px solid var(--error);
+        }
+        
+        .ocr-text {
+            background: rgba(45, 45, 45, 0.9);
+            border: 1px solid rgba(192, 192, 192, 0.2);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        #particles-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body class="bg-pattern">
+    <div id="particles-bg"></div>
+    
+    <!-- Header -->
+    <header class="glass-effect sticky top-0 z-50 px-4 py-3">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <a href="index.html" class="p-2 rounded-lg hover:bg-medium-grey transition-colors">
+                    <svg class="w-5 h-5 text-accent-silver" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </a>
+                <h1 class="text-lg font-semibold text-light-grey">Receipt Processing</h1>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button id="bulk-process-btn" class="px-3 py-2 bg-steel-blue rounded-lg text-sm font-medium hover:silver-glow transition-all">
+                    Bulk Process
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Upload Section -->
+    <section class="px-4 py-6">
+        <div class="text-center mb-6">
+            <h2 class="text-2xl font-bold mb-2 metric-highlight">Receipt Upload</h2>
+            <p class="text-sm text-accent-silver">Upload and process receipts for participating items</p>
+        </div>
+        
+        <div class="upload-area rounded-xl p-8 mb-6" id="upload-area">
+            <div class="text-center">
+                <svg class="w-12 h-12 text-accent-silver mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                </svg>
+                <h3 class="text-lg font-semibold text-light-grey mb-2">Upload Receipt Images</h3>
+                <p class="text-sm text-accent-silver mb-4">Drag and drop images here or click to browse</p>
+                <input type="file" id="receipt-input" accept="image/*" multiple class="hidden">
+                <button id="browse-btn" class="px-6 py-3 bg-steel-blue rounded-lg font-medium hover:silver-glow transition-all">
+                    Browse Files
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Processing Queue -->
+    <section class="px-4 py-4">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-light-grey">Processing Queue</h3>
+            <div class="flex items-center space-x-2">
+                <span class="text-sm text-accent-silver">Auto-process:</span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="auto-process" class="sr-only peer" checked>
+                    <div class="w-11 h-6 bg-medium-grey peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-steel-blue/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-steel-blue"></div>
+                </label>
+            </div>
+        </div>
+        
+        <div class="space-y-3" id="processing-queue">
+            <!-- Processing items will be dynamically generated -->
+        </div>
+    </section>
+
+    <!-- Receipt Analysis -->
+    <section class="px-4 py-4">
+        <h3 class="text-lg font-semibold text-light-grey mb-4">Receipt Analysis</h3>
+        
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <div class="performance-card rounded-xl p-4 text-center">
+                <div class="text-2xl font-bold font-mono metric-highlight" id="total-receipts">0</div>
+                <div class="text-sm text-accent-silver">Total Receipts</div>
+            </div>
+            <div class="performance-card rounded-xl p-4 text-center">
+                <div class="text-2xl font-bold font-mono text-success" id="participating-items">0</div>
+                <div class="text-sm text-accent-silver">Participating Items</div>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <div class="performance-card rounded-xl p-4 text-center">
+                <div class="text-2xl font-bold font-mono text-warning" id="non-participating-items">0</div>
+                <div class="text-sm text-accent-silver">Non-Participating</div>
+            </div>
+            <div class="performance-card rounded-xl p-4 text-center">
+                <div class="text-2xl font-bold font-mono text-error" id="flagged-items">0</div>
+                <div class="text-sm text-accent-silver">Flagged Items</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Item Categories -->
+    <section class="px-4 py-4">
+        <h3 class="text-lg font-semibold text-light-grey mb-4">Item Categories</h3>
+        
+        <!-- Participating Items -->
+        <div class="mb-6">
+            <div class="flex items-center justify-between mb-3">
+                <h4 class="text-md font-semibold text-success">Participating Items</h4>
+                <span class="text-sm text-accent-silver" id="participating-count">0 items</span>
+            </div>
+            <div class="space-y-2" id="participating-items-list">
+                <!-- Participating items will be listed here -->
+            </div>
+        </div>
+        
+        <!-- Non-Participating Items -->
+        <div class="mb-6">
+            <div class="flex items-center justify-between mb-3">
+                <h4 class="text-md font-semibold text-warning">Non-Participating Items</h4>
+                <span class="text-sm text-accent-silver" id="non-participating-count">0 items</span>
+            </div>
+            <div class="space-y-2" id="non-participating-items-list">
+                <!-- Non-participating items will be listed here -->
+            </div>
+        </div>
+        
+        <!-- Flagged Items -->
+        <div class="mb-6">
+            <div class="flex items-center justify-between mb-3">
+                <h4 class="text-md font-semibold text-error">Flagged Items</h4>
+                <span class="text-sm text-accent-silver" id="flagged-count">0 items</span>
+            </div>
+            <div class="space-y-2" id="flagged-items-list">
+                <!-- Flagged items will be listed here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Business Development Leads -->
+    <section class="px-4 py-4 mb-20">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-light-grey">Business Development Leads</h3>
+            <button id="export-leads-btn" class="px-3 py-2 bg-steel-blue rounded-lg text-sm font-medium hover:silver-glow transition-all">
+                Export Leads
+            </button>
+        </div>
+        
+        <div class="performance-card rounded-xl p-4">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-medium-grey">
+                            <th class="text-left py-2 text-accent-silver">Item Name</th>
+                            <th class="text-left py-2 text-accent-silver">Frequency</th>
+                            <th class="text-left py-2 text-accent-silver">Potential Value</th>
+                            <th class="text-left py-2 text-accent-silver">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leads-table-body">
+                        <!-- Leads will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bottom Navigation -->
+    <nav class="nav-bottom fixed bottom-0 left-0 right-0 px-4 py-3 z-50">
+        <div class="flex justify-around">
+            <a href="index.html" class="flex flex-col items-center space-y-1 text-accent-silver hover:text-steel-blue transition-colors">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                </svg>
+                <span class="text-xs">Dashboard</span>
+            </a>
+            <a href="performance.html" class="flex flex-col items-center space-y-1 text-accent-silver hover:text-steel-blue transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                <span class="text-xs">Performance</span>
+            </a>
+            <a href="receipts.html" class="flex flex-col items-center space-y-1 text-steel-blue">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span class="text-xs">Receipts</span>
+            </a>
+            <a href="brand-portal.html" class="flex flex-col items-center space-y-1 text-accent-silver hover:text-steel-blue transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6"/>
+                </svg>
+                <span class="text-xs">Brand Portal</span>
+            </a>
+        </div>
+    </nav>
+
+    <script>
+        // Receipt processing specific JavaScript
+        let receiptCounter = 0;
+        let totalReceipts = 0;
+        let participatingItems = 0;
+        let nonParticipatingItems = 0;
+        let flaggedItems = 0;
+        
+        const participatingProducts = [
+            'OMO', 'COCA COLA', 'PEPSI', 'ELIANTO', 'COLGATE', 'KIWI', 'GEISHA', 'NIVEA',
+            'LUX', 'ARIEL', 'TIDE', 'DETERGENT', 'SODA', 'COKE', 'FANTA', 'SPRITE'
+        ];
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeReceiptsPage();
+        });
+
+        function initializeReceiptsPage() {
+            setupFileUpload();
+            setupEventListeners();
+            initializeParticleBackground();
+            loadSampleData();
+            
+            // Animate page load
+            anime({
+                targets: '.performance-card',
+                opacity: [0, 1],
+                translateY: [20, 0],
+                delay: anime.stagger(100),
+                duration: 800,
+                easing: 'easeOutQuart'
+            });
+        }
+
+        function setupFileUpload() {
+            const uploadArea = document.getElementById('upload-area');
+            const receiptInput = document.getElementById('receipt-input');
+            const browseBtn = document.getElementById('browse-btn');
+            
+            browseBtn.addEventListener('click', () => receiptInput.click());
+            receiptInput.addEventListener('change', handleFileSelect);
+            
+            // Drag and drop functionality
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                handleFileSelect(e);
+            });
+        }
+
+        function setupEventListeners() {
+            const bulkProcessBtn = document.getElementById('bulk-process-btn');
+            const exportLeadsBtn = document.getElementById('export-leads-btn');
+            const autoProcessToggle = document.getElementById('auto-process');
+            
+            bulkProcessBtn.addEventListener('click', processAllReceipts);
+            exportLeadsBtn.addEventListener('click', exportLeads);
+            
+            // Auto-process toggle
+            autoProcessToggle.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    showToast('Auto-processing enabled', 'success');
+                } else {
+                    showToast('Auto-processing disabled', 'info');
+                }
+            });
+        }
+
+        function handleFileSelect(event) {
+            const files = event.target?.files || event.dataTransfer?.files;
+            if (!files) return;
+            
+            Array.from(files).forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    processReceiptFile(file);
+                }
+            });
+        }
+
+        function processReceiptFile(file) {
+            receiptCounter++;
+            totalReceipts++;
+            
+            const queueItem = createQueueItem(file, receiptCounter);
+            document.getElementById('processing-queue').appendChild(queueItem);
+            
+            // Simulate OCR processing
+            setTimeout(() => {
+                processReceiptContent(queueItem, receiptCounter);
+            }, 2000 + Math.random() * 3000);
+            
+            updateStats();
+        }
+
+        function createQueueItem(file, id) {
+            const item = document.createElement('div');
+            item.className = 'performance-card rounded-lg p-4 hover-lift';
+            item.id = `queue-item-${id}`;
+            
+            item.innerHTML = `
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 bg-steel-blue rounded-lg flex items-center justify-center text-lg">
+                        📄
+                    </div>
+                    <div class="flex-1">
+                        <div class="font-semibold text-light-grey">${file.name}</div>
+                        <div class="text-sm text-accent-silver">${(file.size / 1024).toFixed(1)} KB • Processing...</div>
+                    </div>
+                    <div class="processing-spinner">
+                        <div class="w-6 h-6 border-2 border-steel-blue border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                </div>
+            `;
+            
+            return item;
+        }
+
+        function processReceiptContent(queueItem, id) {
+            // Simulate OCR extraction
+            const mockReceiptData = generateMockReceiptData();
+            
+            // Update queue item
+            queueItem.innerHTML = `
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 bg-success rounded-lg flex items-center justify-center text-lg">
+                        ✅
+                    </div>
+                    <div class="flex-1">
+                        <div class="font-semibold text-light-grey">Receipt #${id}</div>
+                        <div class="text-sm text-accent-silver">
+                            ${mockReceiptData.items.length} items • ${mockReceiptData.participating} participating
+                        </div>
+                    </div>
+                    <button onclick="viewReceiptDetails(${id})" 
+                            class="px-3 py-1 bg-steel-blue text-xs rounded hover:silver-glow transition-all">
+                        View Details
+                    </button>
+                </div>
+            `;
+            
+            // Categorize items
+            mockReceiptData.items.forEach(item => {
+                const isParticipating = participatingProducts.some(product => 
+                    item.name.toUpperCase().includes(product)
+                );
+                
+                if (isParticipating) {
+                    participatingItems++;
+                    addItemToCategory(item, 'participating');
+                } else {
+                    nonParticipatingItems++;
+                    addItemToCategory(item, 'non-participating');
+                    
+                    // Flag high-value non-participating items
+                    if (item.price > 100) {
+                        flaggedItems++;
+                        addItemToCategory(item, 'flagged');
+                    }
+                }
+            });
+            
+            updateCategoryLists();
+            updateStats();
+            updateLeadsTable();
+            
+            // Auto-process next if enabled
+            if (document.getElementById('auto-process').checked) {
+                setTimeout(() => {
+                    queueItem.style.opacity = '0.5';
+                }, 2000);
+            }
+        }
+
+        function generateMockReceiptData() {
+            const items = [
+                { name: 'OMO WASHING POWDER', price: 245, quantity: 2 },
+                { name: 'COCA COLA 500ML', price: 45, quantity: 3 },
+                { name: 'BREAD LOAF', price: 55, quantity: 1 },
+                { name: 'MILK 1L', price: 95, quantity: 2 },
+                { name: 'ELIANTO COOKING OIL', price: 320, quantity: 1 },
+                { name: 'COLGATE TOOTHPASTE', price: 180, quantity: 1 },
+                { name: 'BISCUITS', price: 75, quantity: 2 },
+                { name: 'KIWI SHOE POLISH', price: 125, quantity: 1 }
+            ];
+            
+            const participating = items.filter(item => 
+                participatingProducts.some(product => item.name.toUpperCase().includes(product))
+            ).length;
+            
+            return {
+                items: items,
+                participating: participating,
+                total: items.length
+            };
+        }
+
+        function addItemToCategory(item, category) {
+            const container = document.getElementById(`${category}-items-list`);
+            const itemElement = document.createElement('div');
+            itemElement.className = `${category}-item rounded-lg p-3 hover-lift`;
+            
+            const statusColor = category === 'participating' ? 'text-success' :
+                               category === 'non-participating' ? 'text-warning' : 'text-error';
+            
+            const statusIcon = category === 'participating' ? '✅' :
+                              category === 'non-participating' ? '⚠️' : '🚨';
+            
+            itemElement.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <span class="${statusColor}">${statusIcon}</span>
+                        <div>
+                            <div class="font-medium text-light-grey">${item.name}</div>
+                            <div class="text-xs text-accent-silver">Qty: ${item.quantity} • KES ${item.price}</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-mono text-light-grey">KES ${(item.price * item.quantity).toLocaleString()}</div>
+                        ${category === 'flagged' ? '<div class="text-xs text-error">High Value</div>' : ''}
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(itemElement);
+        }
+
+        function updateCategoryLists() {
+            document.getElementById('participating-count').textContent = `${participatingItems} items`;
+            document.getElementById('non-participating-count').textContent = `${nonParticipatingItems} items`;
+            document.getElementById('flagged-count').textContent = `${flaggedItems} items`;
+        }
+
+        function updateStats() {
+            document.getElementById('total-receipts').textContent = totalReceipts;
+            document.getElementById('participating-items').textContent = participatingItems;
+            document.getElementById('non-participating-items').textContent = nonParticipatingItems;
+            document.getElementById('flagged-items').textContent = flaggedItems;
+            
+            // Animate stats update
+            anime({
+                targets: '.metric-highlight, .text-success, .text-warning, .text-error',
+                scale: [1.1, 1],
+                duration: 300,
+                easing: 'easeOutQuart'
+            });
+        }
+
+        function updateLeadsTable() {
+            const leads = [
+                { name: 'BREAD LOAF', frequency: 15, value: 'KES 12,500', status: 'Contacted' },
+                { name: 'MILK 1L', frequency: 23, value: 'KES 21,850', status: 'In Progress' },
+                { name: 'BISCUITS', frequency: 8, value: 'KES 6,000', status: 'New Lead' }
+            ];
+            
+            const tbody = document.getElementById('leads-table-body');
+            tbody.innerHTML = '';
+            
+            leads.forEach(lead => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-medium-grey/30 hover:bg-secondary-bg/50';
+                
+                const statusColor = lead.status === 'New Lead' ? 'text-error' :
+                                   lead.status === 'In Progress' ? 'text-warning' : 'text-success';
+                
+                row.innerHTML = `
+                    <td class="py-2 text-light-grey">${lead.name}</td>
+                    <td class="py-2 text-accent-silver">${lead.frequency}</td>
+                    <td class="py-2 text-light-grey font-mono">${lead.value}</td>
+                    <td class="py-2 ${statusColor} font-medium">${lead.status}</td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        function viewReceiptDetails(id) {
+            showToast(`Viewing receipt #${id} details`, 'info');
+        }
+
+        function processAllReceipts() {
+            showToast('Bulk processing initiated', 'info');
+            // Simulate bulk processing
+            setTimeout(() => {
+                showToast('Bulk processing completed', 'success');
+            }, 3000);
+        }
+
+        function exportLeads() {
+            showToast('Leads exported successfully', 'success');
+            // Simulate CSV export
+        }
+
+        function loadSampleData() {
+            // Add some sample receipts on page load
+            setTimeout(() => {
+                for (let i = 1; i <= 3; i++) {
+                    const mockFile = {
+                        name: `sample-receipt-${i}.jpg`,
+                        size: 1024 * (500 + Math.random() * 1000)
+                    };
+                    processReceiptFile(mockFile);
+                }
+            }, 1000);
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-20 right-4 px-4 py-3 rounded-lg text-white text-sm font-medium z-50 ${
+                type === 'success' ? 'bg-success' :
+                type === 'warning' ? 'bg-warning' :
+                type === 'error' ? 'bg-error' : 'bg-info'
+            }`;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            anime({
+                targets: toast,
+                opacity: [0, 1],
+                translateX: [100, 0],
+                duration: 300,
+                easing: 'easeOutQuart'
+            });
+            
+            setTimeout(() => {
+                anime({
+                    targets: toast,
+                    opacity: [1, 0],
+                    translateX: [0, 100],
+                    duration: 300,
+                    easing: 'easeInQuart',
+                    complete: () => toast.remove()
+                });
+            }, 3000);
+        }
+
+        function initializeParticleBackground() {
+            new p5((p) => {
+                let particles = [];
+                
+                p.setup = function() {
+                    const canvas = p.createCanvas(p.windowWidth, p.windowHeight);
+                    canvas.parent('particles-bg');
+                    
+                    for (let i = 0; i < 25; i++) {
+                        particles.push({
+                            x: p.random(p.width),
+                            y: p.random(p.height),
+                            vx: p.random(-0.2, 0.2),
+                            vy: p.random(-0.2, 0.2),
+                            size: p.random(1, 2)
+                        });
+                    }
+                };
+                
+                p.draw = function() {
+                    p.clear();
+                    
+                    particles.forEach(particle => {
+                        particle.x += particle.vx;
+                        particle.y += particle.vy;
+                        
+                        if (particle.x < 0) particle.x = p.width;
+                        if (particle.x > p.width) particle.x = 0;
+                        if (particle.y < 0) particle.y = p.height;
+                        if (particle.y > p.height) particle.y = 0;
+                        
+                        p.fill(192, 192, 192, 60);
+                        p.noStroke();
+                        p.circle(particle.x, particle.y, particle.size);
+                    });
+                };
+                
+                p.windowResized = function() {
+                    p.resizeCanvas(p.windowWidth, p.windowHeight);
+                };
+            });
+        }
+    </script>
+</body>
+</html>

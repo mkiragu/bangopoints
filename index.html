@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BangoPoints - Employee Management Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/splide.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/css/splide.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: #1a1a1a;
+            --secondary-bg: #2d2d2d;
+            --accent-silver: #c0c0c0;
+            --light-grey: #e5e5e5;
+            --medium-grey: #404040;
+            --steel-blue: #4a90a4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --info: #3b82f6;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--light-grey);
+        }
+        
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .bg-pattern {
+            background-image: radial-gradient(circle at 1px 1px, rgba(192,192,192,0.1) 1px, transparent 0);
+            background-size: 20px 20px;
+        }
+        
+        .glass-effect {
+            background: rgba(45, 45, 45, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(192, 192, 192, 0.1);
+        }
+        
+        .silver-glow {
+            box-shadow: 0 0 20px rgba(192, 192, 192, 0.3);
+        }
+        
+        .hover-lift {
+            transition: all 0.3s ease;
+        }
+        
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(192, 192, 192, 0.2);
+        }
+        
+        .pulse-silver {
+            animation: pulseSilver 2s infinite;
+        }
+        
+        @keyframes pulseSilver {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .nav-bottom {
+            background: rgba(26, 26, 26, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(192, 192, 192, 0.1);
+        }
+        
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        .status-online { background-color: var(--success); }
+        .status-away { background-color: var(--warning); }
+        .status-offline { background-color: var(--error); }
+        
+        .performance-card {
+            background: linear-gradient(135deg, rgba(45, 45, 45, 0.9) 0%, rgba(64, 64, 64, 0.8) 100%);
+            border: 1px solid rgba(192, 192, 192, 0.2);
+        }
+        
+        .metric-highlight {
+            background: linear-gradient(45deg, var(--steel-blue), var(--accent-silver));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .nav-bottom {
+            background: rgba(26, 26, 26, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(192, 192, 192, 0.1);
+        }
+        
+        #particles-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body class="bg-pattern">
+    <div id="particles-bg"></div>
+    
+    <!-- Header -->
+    <header class="glass-effect sticky top-0 z-50 px-4 py-3">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 bg-gradient-to-br from-steel-blue to-accent-silver rounded-lg flex items-center justify-center">
+                    <span class="text-primary-bg font-bold text-sm">BP</span>
+                </div>
+                <h1 class="text-lg font-semibold text-light-grey">BangoPoints</h1>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button id="notification-btn" class="relative p-2 rounded-lg hover:bg-medium-grey transition-colors">
+                    <svg class="w-5 h-5 text-accent-silver" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM11 17H6l5 5v-5zM7 7h10v10H7V7z"/>
+                    </svg>
+                    <span id="notification-badge" class="absolute -top-1 -right-1 w-4 h-4 bg-error rounded-full text-xs flex items-center justify-center text-white pulse-silver">3</span>
+                </button>
+                <div class="w-8 h-8 bg-gradient-to-br from-steel-blue to-accent-silver rounded-full"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="px-4 py-6">
+        <div class="text-center mb-6">
+            <h2 class="text-2xl font-bold mb-2 metric-highlight">Employee Management Hub</h2>
+            <p class="text-sm text-accent-silver">Track performance, manage shifts, and monitor productivity in real-time</p>
+        </div>
+        
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <div class="performance-card rounded-xl p-4 hover-lift">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs text-accent-silver">Active PPGs</span>
+                    <span class="status-indicator status-online"></span>
+                </div>
+                <div class="text-2xl font-bold font-mono metric-highlight" id="active-ppgs">24</div>
+                <div class="text-xs text-success">+3 from yesterday</div>
+            </div>
+            <div class="performance-card rounded-xl p-4 hover-lift">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs text-accent-silver">Avg Performance</span>
+                    <span class="status-indicator status-online"></span>
+                </div>
+                <div class="text-2xl font-bold font-mono metric-highlight" id="avg-performance">87%</div>
+                <div class="text-xs text-success">+5% this week</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Employee Management Section -->
+    <section class="px-4 py-4">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-light-grey">PPG Management</h3>
+            <button id="add-employee-btn" class="px-3 py-2 bg-steel-blue rounded-lg text-sm font-medium hover:silver-glow transition-all">
+                Add PPG
+            </button>
+        </div>
+        
+        <!-- Search and Filter -->
+        <div class="mb-4">
+            <div class="relative">
+                <input type="text" id="employee-search" placeholder="Search PPGs by name, location, or ID..." 
+                       class="w-full px-4 py-3 bg-secondary-bg border border-medium-grey rounded-lg text-light-grey placeholder-accent-silver focus:border-steel-blue focus:outline-none">
+                <svg class="absolute right-3 top-3 w-5 h-5 text-accent-silver" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Employee List -->
+        <div class="space-y-3" id="employee-list">
+            <!-- Employee cards will be dynamically generated -->
+        </div>
+    </section>
+
+    <!-- Performance Chart Section -->
+    <section class="px-4 py-4">
+        <h3 class="text-lg font-semibold text-light-grey mb-4">Performance Overview</h3>
+        <div class="performance-card rounded-xl p-4">
+            <div id="performance-chart" class="h-64"></div>
+        </div>
+    </section>
+
+    <!-- Recent Activity -->
+    <section class="px-4 py-4 mb-20">
+        <h3 class="text-lg font-semibold text-light-grey mb-4">Recent Activity</h3>
+        <div class="space-y-3" id="activity-feed">
+            <!-- Activity items will be dynamically generated -->
+        </div>
+    </section>
+
+    <!-- Bottom Navigation -->
+    <nav class="nav-bottom fixed bottom-0 left-0 right-0 px-4 py-3 z-50">
+        <div class="flex justify-around">
+            <a href="index.html" class="flex flex-col items-center space-y-1 text-steel-blue">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                </svg>
+                <span class="text-xs">Dashboard</span>
+            </a>
+            <a href="performance.html" class="flex flex-col items-center space-y-1 text-accent-silver hover:text-steel-blue transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                <span class="text-xs">Performance</span>
+            </a>
+            <a href="receipts.html" class="flex flex-col items-center space-y-1 text-accent-silver hover:text-steel-blue transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span class="text-xs">Receipts</span>
+            </a>
+            <a href="brand-portal.html" class="flex flex-col items-center space-y-1 text-accent-silver hover:text-steel-blue transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6"/>
+                </svg>
+                <span class="text-xs">Brand Portal</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Notification Modal -->
+    <div id="notification-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="glass-effect rounded-xl p-6 w-full max-w-md">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-light-grey">Notifications</h3>
+                    <button id="close-notifications" class="text-accent-silver hover:text-light-grey">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="space-y-3" id="notification-list">
+                    <!-- Notifications will be dynamically generated -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>

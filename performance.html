@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BangoPoints - Performance Tracking</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: #1a1a1a;
+            --secondary-bg: #2d2d2d;
+            --accent-silver: #c0c0c0;
+            --light-grey: #e5e5e5;
+            --medium-grey: #404040;
+            --steel-blue: #4a90a4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --info: #3b82f6;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--light-grey);
+        }
+        
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .bg-pattern {
+            background-image: radial-gradient(circle at 1px 1px, rgba(192,192,192,0.1) 1px, transparent 0);
+            background-size: 20px 20px;
+        }
+        
+        .glass-effect {
+            background: rgba(45, 45, 45, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(192, 192, 192, 0.1);
+        }
+        
+        .silver-glow {
+            box-shadow: 0 0 20px rgba(192, 192, 192, 0.3);
+        }
+        
+        .hover-lift {
+            transition: all 0.3s ease;
+        }
+        
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(192, 192, 192, 0.2);
+        }
+        
+        .nav-bottom {
+            background: rgba(26, 26, 26, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(192, 192, 192, 0.1);
+        }
+        
+        .performance-card {
+            background: linear-gradient(135deg, rgba(45, 45, 45, 0.9) 0%, rgba(64, 64, 64, 0.8) 100%);
+            border: 1px solid rgba(192, 192, 192, 0.2);
+        }
+        
+        .metric-highlight {
+            background: linear-gradient(45deg, var(--steel-blue), var(--accent-silver));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .progress-bar {
+            background: linear-gradient(90deg, var(--steel-blue) 0%, var(--accent-silver) 100%);
+            height: 8px;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        
+        .calculator-input {
+            background: rgba(45, 45, 45, 0.9);
+            border: 1px solid rgba(192, 192, 192, 0.2);
+            color: var(--light-grey);
+        }
+        
+        .calculator-input:focus {
+            border-color: var(--steel-blue);
+            box-shadow: 0 0 0 2px rgba(74, 144, 164, 0.2);
+        }
+        
+        .alert-badge {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        #particles-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body class="bg-pattern">
+    <div id="particles-bg"></div>
+    
+    <!-- Header -->
+    <header class="glass-effect sticky top-0 z-50 px-4 py-3">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <a href="index.html" class="p-2 rounded-lg hover:bg-medium-grey transition-colors">
+                    <svg class="w-5 h-5 text-accent-silver" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </a>
+                <h1 class="text-lg font-semibold text-light-grey">Performance Tracking</h1>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button id="alert-config-btn" class="relative p-2 rounded-lg hover:bg-medium-grey transition-colors">
+                    <svg class="w-5 h-5 text-accent-silver" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                    </svg>
+                    <span id="alert-count" class="absolute -top-1 -right-1 w-4 h-4 bg-error rounded-full text-xs flex items-center justify-center text-white alert-badge">2</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Performance Calculator Section -->
+    <section class="px-4 py-6">
+        <div class="text-center mb-6">
+            <h2 class="text-2xl font-bold mb-2 metric-highlight">Performance Calculator</h2>
+            <p class="text-sm text-accent-silver">Real-time wage calculation based on target achievement</p>
+        </div>
+        
+        <div class="performance-card rounded-xl p-6 mb-6">
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-accent-silver mb-2">Receipts Count</label>
+                    <input type="number" id="receipts-count" value="25" min="0" 
+                           class="w-full px-3 py-2 calculator-input rounded-lg focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-accent-silver mb-2">Items per Receipt</label>
+                    <input type="number" id="items-per-receipt" value="3" min="1" 
+                           class="w-full px-3 py-2 calculator-input rounded-lg focus:outline-none">
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-accent-silver mb-2">Daily Target</label>
+                    <input type="number" id="daily-target" value="150" min="1" 
+                           class="w-full px-3 py-2 calculator-input rounded-lg focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-accent-silver mb-2">Base Daily Wage (KES)</label>
+                    <input type="number" id="base-wage" value="2500" min="0" 
+                           class="w-full px-3 py-2 calculator-input rounded-lg focus:outline-none">
+                </div>
+            </div>
+            
+            <button id="calculate-performance" 
+                    class="w-full px-4 py-3 bg-steel-blue rounded-lg font-medium hover:silver-glow transition-all">
+                Calculate Performance
+            </button>
+        </div>
+        
+        <!-- Results Display -->
+        <div class="performance-card rounded-xl p-6" id="results-card">
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="text-center">
+                    <div class="text-3xl font-bold font-mono metric-highlight" id="performance-percentage">0%</div>
+                    <div class="text-sm text-accent-silver">Performance %</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold font-mono metric-highlight" id="calculated-wage">KES 0</div>
+                    <div class="text-sm text-accent-silver">Daily Wage</div>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <div class="flex justify-between text-sm mb-2">
+                    <span class="text-accent-silver">Target Progress</span>
+                    <span class="text-light-grey" id="progress-text">0/0</span>
+                </div>
+                <div class="w-full bg-medium-grey rounded-full h-2">
+                    <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <div class="text-sm text-accent-silver mb-2">Performance Status</div>
+                <div class="text-lg font-semibold" id="performance-status">Enter values to calculate</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Employee Performance Section -->
+    <section class="px-4 py-4">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-light-grey">PPG Performance Monitor</h3>
+            <select id="employee-selector" class="px-3 py-2 bg-secondary-bg border border-medium-grey rounded-lg text-light-grey focus:border-steel-blue focus:outline-none">
+                <option value="">Select PPG</option>
+            </select>
+        </div>
+        
+        <div class="performance-card rounded-xl p-4 mb-4" id="employee-performance-card">
+            <div class="text-center text-accent-silver py-8">
+                Select a PPG to view performance details
+            </div>
+        </div>
+    </section>
+
+    <!-- Performance Alerts Section -->
+    <section class="px-4 py-4">
+        <h3 class="text-lg font-semibold text-light-grey mb-4">Performance Alerts</h3>
+        <div class="space-y-3" id="performance-alerts">
+            <!-- Alerts will be dynamically generated -->
+        </div>
+    </section>
+
+    <!-- Performance Trends Chart -->
+    <section class="px-4 py-4 mb-20">
+        <h3 class="text-lg font-semibold text-light-grey mb-4">Performance Trends</h3>
+        <div class="performance-card rounded-xl p-4">
+            <div id="trends-chart" class="h-64"></div>
+        </div>
+    </section>
+
+    <!-- Bottom Navigation -->
+    <nav class="nav-bottom fixed bottom-0 left-0 right-0 px-4 py-3 z-50">
+        <div class="flex justify-around">
+            <a href="index.html" class="flex flex-col items-center space-y-1 text-accent-silver hover:text-steel-blue transition-colors">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                </svg>
+                <span class="text-xs">Dashboard</span>
+            </a>
+            <a href="performance.html" class="flex flex-col items-center space-y-1 text-steel-blue">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                <span class="text-xs">Performance</span>
+            </a>
+            <a href="receipts.html" class="flex flex-col items-center space-y-1 text-accent-silver hover:text-steel-blue transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span class="text-xs">Receipts</span>
+            </a>
+            <a href="brand-portal.html" class="flex flex-col items-center space-y-1 text-accent-silver hover:text-steel-blue transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6"/>
+                </svg>
+                <span class="text-xs">Brand Portal</span>
+            </a>
+        </div>
+    </nav>
+
+    <script>
+        // Performance tracking specific JavaScript
+        document.addEventListener('DOMContentLoaded', function() {
+            initializePerformancePage();
+        });
+
+        function initializePerformancePage() {
+            setupPerformanceCalculators();
+            populateEmployeeSelector();
+            initializeTrendsChart();
+            loadPerformanceAlerts();
+            initializeParticleBackground();
+            
+            // Animate page load
+            anime({
+                targets: '.performance-card',
+                opacity: [0, 1],
+                translateY: [20, 0],
+                delay: anime.stagger(100),
+                duration: 800,
+                easing: 'easeOutQuart'
+            });
+        }
+
+        function setupPerformanceCalculators() {
+            const calculateBtn = document.getElementById('calculate-performance');
+            calculateBtn.addEventListener('click', calculatePerformance);
+            
+            // Real-time calculation on input change
+            const inputs = ['receipts-count', 'items-per-receipt', 'daily-target', 'base-wage'];
+            inputs.forEach(id => {
+                document.getElementById(id).addEventListener('input', calculatePerformance);
+            });
+            
+            // Alert configuration
+            const alertConfigBtn = document.getElementById('alert-config-btn');
+            alertConfigBtn.addEventListener('click', () => {
+                showToast('Alert configuration coming soon!', 'info');
+            });
+            
+            // Employee selector
+            const employeeSelector = document.getElementById('employee-selector');
+            employeeSelector.addEventListener('change', (e) => {
+                if (e.target.value) {
+                    loadEmployeePerformance(e.target.value);
+                }
+            });
+        }
+
+        function calculatePerformance() {
+            const receipts = parseInt(document.getElementById('receipts-count').value) || 0;
+            const itemsPerReceipt = parseInt(document.getElementById('items-per-receipt').value) || 0;
+            const dailyTarget = parseInt(document.getElementById('daily-target').value) || 0;
+            const baseWage = parseInt(document.getElementById('base-wage').value) || 0;
+            
+            const totalItems = receipts * itemsPerReceipt;
+            const performancePercentage = dailyTarget > 0 ? Math.round((totalItems / dailyTarget) * 100) : 0;
+            const calculatedWage = Math.round(baseWage * (performancePercentage / 100));
+            
+            // Update UI
+            document.getElementById('performance-percentage').textContent = performancePercentage + '%';
+            document.getElementById('calculated-wage').textContent = 'KES ' + calculatedWage.toLocaleString();
+            document.getElementById('progress-text').textContent = totalItems + '/' + dailyTarget;
+            document.getElementById('progress-bar').style.width = Math.min(performancePercentage, 100) + '%';
+            
+            // Update status
+            const statusElement = document.getElementById('performance-status');
+            if (performancePercentage >= 100) {
+                statusElement.textContent = 'Target Exceeded! 🎉';
+                statusElement.className = 'text-lg font-semibold text-success';
+            } else if (performancePercentage >= 80) {
+                statusElement.textContent = 'Good Performance 👍';
+                statusElement.className = 'text-lg font-semibold text-info';
+            } else if (performancePercentage >= 60) {
+                statusElement.textContent = 'Average Performance ⚠️';
+                statusElement.className = 'text-lg font-semibold text-warning';
+            } else {
+                statusElement.textContent = 'Below Target 🚨';
+                statusElement.className = 'text-lg font-semibold text-error';
+            }
+            
+            // Animate results
+            anime({
+                targets: '#results-card .metric-highlight',
+                scale: [1.2, 1],
+                duration: 500,
+                easing: 'easeOutQuart'
+            });
+        }
+
+        function populateEmployeeSelector() {
+            const selector = document.getElementById('employee-selector');
+            const employees = [
+                { id: 'PPG001', name: 'Sarah Mwangi' },
+                { id: 'PPG002', name: 'James Kiprotich' },
+                { id: 'PPG003', name: 'Amina Hassan' },
+                { id: 'PPG004', name: 'David Otieno' },
+                { id: 'PPG005', name: 'Grace Wanjiku' }
+            ];
+            
+            employees.forEach(employee => {
+                const option = document.createElement('option');
+                option.value = employee.id;
+                option.textContent = `${employee.id} - ${employee.name}`;
+                selector.appendChild(option);
+            });
+        }
+
+        function loadEmployeePerformance(employeeId) {
+            const performanceData = {
+                'PPG001': { name: 'Sarah Mwangi', performance: 92, trend: 'up', alerts: 0 },
+                'PPG002': { name: 'James Kiprotich', performance: 78, trend: 'stable', alerts: 0 },
+                'PPG003': { name: 'Amina Hassan', performance: 65, trend: 'down', alerts: 1 },
+                'PPG004': { name: 'David Otieno', performance: 45, trend: 'down', alerts: 2 },
+                'PPG005': { name: 'Grace Wanjiku', performance: 89, trend: 'up', alerts: 0 }
+            };
+            
+            const data = performanceData[employeeId];
+            if (!data) return;
+            
+            const card = document.getElementById('employee-performance-card');
+            const trendColor = data.trend === 'up' ? 'text-success' : 
+                              data.trend === 'down' ? 'text-error' : 'text-warning';
+            const trendIcon = data.trend === 'up' ? '📈' : 
+                             data.trend === 'down' ? '📉' : '➡️';
+            
+            card.innerHTML = `
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h4 class="text-lg font-semibold text-light-grey">${data.name}</h4>
+                        <p class="text-sm text-accent-silver">${employeeId}</p>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-2xl ${trendColor}">${trendIcon}</div>
+                        <div class="text-xs text-accent-silver capitalize">${data.trend}</div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="text-center">
+                        <div class="text-2xl font-bold font-mono metric-highlight">${data.performance}%</div>
+                        <div class="text-sm text-accent-silver">Current Performance</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold font-mono ${data.alerts > 0 ? 'text-error' : 'text-success'}">${data.alerts}</div>
+                        <div class="text-sm text-accent-silver">Active Alerts</div>
+                    </div>
+                </div>
+                
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-accent-silver">Target Achievement</span>
+                        <span class="text-light-grey">${Math.round(data.performance * 1.5)}/150</span>
+                    </div>
+                    <div class="w-full bg-medium-grey rounded-full h-2">
+                        <div class="progress-bar" style="width: ${data.performance}%"></div>
+                    </div>
+                </div>
+            `;
+            
+            // Animate card update
+            anime({
+                targets: card,
+                opacity: [0.5, 1],
+                scale: [0.95, 1],
+                duration: 400,
+                easing: 'easeOutQuart'
+            });
+        }
+
+        function loadPerformanceAlerts() {
+            const alerts = [
+                {
+                    type: 'critical',
+                    employee: 'David Otieno (PPG004)',
+                    message: 'Performance below 50% for 3 consecutive days',
+                    time: '2 hours ago',
+                    action: 'Review Required'
+                },
+                {
+                    type: 'warning',
+                    employee: 'Amina Hassan (PPG003)',
+                    message: 'Performance declining over past week',
+                    time: '6 hours ago',
+                    action: 'Monitor Closely'
+                }
+            ];
+            
+            const container = document.getElementById('performance-alerts');
+            container.innerHTML = '';
+            
+            alerts.forEach(alert => {
+                const alertElement = createAlertElement(alert);
+                container.appendChild(alertElement);
+            });
+        }
+
+        function createAlertElement(alert) {
+            const element = document.createElement('div');
+            element.className = 'performance-card rounded-lg p-4 hover-lift';
+            
+            const alertColor = alert.type === 'critical' ? 'text-error' : 
+                              alert.type === 'warning' ? 'text-warning' : 'text-info';
+            const alertIcon = alert.type === 'critical' ? '🚨' : 
+                             alert.type === 'warning' ? '⚠️' : 'ℹ️';
+            
+            element.innerHTML = `
+                <div class="flex items-start space-x-3">
+                    <div class="w-8 h-8 bg-medium-grey rounded-full flex items-center justify-center ${alertColor} text-sm">
+                        ${alertIcon}
+                    </div>
+                    <div class="flex-1">
+                        <div class="font-semibold text-light-grey text-sm">${alert.employee}</div>
+                        <div class="text-accent-silver text-xs mt-1">${alert.message}</div>
+                        <div class="flex items-center justify-between mt-2">
+                            <span class="text-xs text-accent-silver">${alert.time}</span>
+                            <button class="px-2 py-1 bg-steel-blue text-xs rounded hover:silver-glow transition-all">
+                                ${alert.action}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            return element;
+        }
+
+        function initializeTrendsChart() {
+            const chartDom = document.getElementById('trends-chart');
+            const myChart = echarts.init(chartDom);
+            
+            const option = {
+                backgroundColor: 'transparent',
+                tooltip: {
+                    trigger: 'axis',
+                    backgroundColor: '#2d2d2d',
+                    borderColor: '#c0c0c0',
+                    textStyle: {
+                        color: '#e5e5e5'
+                    }
+                },
+                legend: {
+                    data: ['Sarah Mwangi', 'James Kiprotich', 'Amina Hassan', 'David Otieno', 'Grace Wanjiku'],
+                    textStyle: {
+                        color: '#c0c0c0'
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    boundaryGap: false,
+                    data: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                    axisLine: {
+                        lineStyle: {
+                            color: '#404040'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#c0c0c0'
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    min: 0,
+                    max: 100,
+                    axisLine: {
+                        lineStyle: {
+                            color: '#404040'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#c0c0c0'
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: '#404040'
+                        }
+                    }
+                },
+                series: [
+                    {
+                        name: 'Sarah Mwangi',
+                        type: 'line',
+                        data: [85, 88, 92, 94],
+                        lineStyle: { color: '#4a90a4' },
+                        itemStyle: { color: '#4a90a4' }
+                    },
+                    {
+                        name: 'James Kiprotich',
+                        type: 'line',
+                        data: [82, 79, 78, 81],
+                        lineStyle: { color: '#10b981' },
+                        itemStyle: { color: '#10b981' }
+                    },
+                    {
+                        name: 'Amina Hassan',
+                        type: 'line',
+                        data: [75, 70, 68, 65],
+                        lineStyle: { color: '#f59e0b' },
+                        itemStyle: { color: '#f59e0b' }
+                    },
+                    {
+                        name: 'David Otieno',
+                        type: 'line',
+                        data: [70, 60, 52, 45],
+                        lineStyle: { color: '#ef4444' },
+                        itemStyle: { color: '#ef4444' }
+                    },
+                    {
+                        name: 'Grace Wanjiku',
+                        type: 'line',
+                        data: [88, 85, 89, 91],
+                        lineStyle: { color: '#c0c0c0' },
+                        itemStyle: { color: '#c0c0c0' }
+                    }
+                ]
+            };
+            
+            myChart.setOption(option);
+            
+            window.addEventListener('resize', () => {
+                myChart.resize();
+            });
+        }
+
+        function initializeParticleBackground() {
+            new p5((p) => {
+                let particles = [];
+                
+                p.setup = function() {
+                    const canvas = p.createCanvas(p.windowWidth, p.windowHeight);
+                    canvas.parent('particles-bg');
+                    
+                    for (let i = 0; i < 30; i++) {
+                        particles.push({
+                            x: p.random(p.width),
+                            y: p.random(p.height),
+                            vx: p.random(-0.3, 0.3),
+                            vy: p.random(-0.3, 0.3),
+                            size: p.random(1, 2)
+                        });
+                    }
+                };
+                
+                p.draw = function() {
+                    p.clear();
+                    
+                    particles.forEach(particle => {
+                        particle.x += particle.vx;
+                        particle.y += particle.vy;
+                        
+                        if (particle.x < 0) particle.x = p.width;
+                        if (particle.x > p.width) particle.x = 0;
+                        if (particle.y < 0) particle.y = p.height;
+                        if (particle.y > p.height) particle.y = 0;
+                        
+                        p.fill(192, 192, 192, 80);
+                        p.noStroke();
+                        p.circle(particle.x, particle.y, particle.size);
+                    });
+                };
+                
+                p.windowResized = function() {
+                    p.resizeCanvas(p.windowWidth, p.windowHeight);
+                };
+            });
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-20 right-4 px-4 py-3 rounded-lg text-white text-sm font-medium z-50 ${
+                type === 'success' ? 'bg-success' :
+                type === 'warning' ? 'bg-warning' :
+                type === 'error' ? 'bg-error' : 'bg-info'
+            }`;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            anime({
+                targets: toast,
+                opacity: [0, 1],
+                translateX: [100, 0],
+                duration: 300,
+                easing: 'easeOutQuart'
+            });
+            
+            setTimeout(() => {
+                anime({
+                    targets: toast,
+                    opacity: [1, 0],
+                    translateX: [0, 100],
+                    duration: 300,
+                    easing: 'easeInQuart',
+                    complete: () => toast.remove()
+                });
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

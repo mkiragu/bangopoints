@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BangoPoints - Shopper Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: #1a1a1a;
+            --secondary-bg: #2d2d2d;
+            --accent-silver: #c0c0c0;
+            --light-grey: #e5e5e5;
+            --medium-grey: #404040;
+            --steel-blue: #4a90a4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --info: #3b82f6;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--light-grey);
+        }
+        
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .bg-pattern {
+            background-image: radial-gradient(circle at 1px 1px, rgba(192,192,192,0.1) 1px, transparent 0);
+            background-size: 20px 20px;
+        }
+        
+        .glass-effect {
+            background: rgba(45, 45, 45, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(192, 192, 192, 0.1);
+        }
+        
+        .silver-glow {
+            box-shadow: 0 0 20px rgba(192, 192, 192, 0.3);
+        }
+        
+        .hover-lift {
+            transition: all 0.3s ease;
+        }
+        
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(192, 192, 192, 0.2);
+        }
+        
+        .nav-bottom {
+            background: rgba(26, 26, 26, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(192, 192, 192, 0.1);
+        }
+        
+        .performance-card {
+            background: linear-gradient(135deg, rgba(45, 45, 45, 0.9) 0%, rgba(64, 64, 64, 0.8) 100%);
+            border: 1px solid rgba(192, 192, 192, 0.2);
+        }
+        
+        .metric-highlight {
+            background: linear-gradient(45deg, var(--steel-blue), var(--accent-silver));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .points-card {
+            background: linear-gradient(135deg, rgba(74, 144, 164, 0.1) 0%, rgba(192, 192, 192, 0.1) 100%);
+            border: 1px solid rgba(74, 144, 164, 0.3);
+        }
+        
+        .tier-badge {
+            background: linear-gradient(45deg, var(--steel-blue), var(--accent-silver));
+            color: var(--primary-bg);
+            font-weight: bold;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        
+        .progress-ring-circle {
+            stroke-dasharray: 251.2;
+            stroke-dashoffset: 251.2;
+            transition: stroke-dashoffset 0.5s ease-in-out;
+        }
+        
+        .receipt-item {
+            border-left: 4px solid var(--steel-blue);
+        }
+        
+        .award-item {
+            background: rgba(16, 185, 129, 0.1);
+            border-left: 4px solid var(--success);
+        }
+        
+        .gift-item {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid var(--info);
+        }
+        
+        #particles-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body class="bg-pattern">
+    <div id="particles-bg"></div>
+    
+    <!-- Header -->
+    <header class="glass-effect sticky top-0 z-50 px-4 py-3">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 bg-gradient-to-br from-steel-blue to-accent-silver rounded-lg flex items-center justify-center">
+                    <span class="text-primary-bg font-bold text-sm">BP</span>
+                </div>
+                <h1 class="text-lg font-semibold text-light-grey">BangoPoints</h1>
+            </div>
+            <div class="flex items-center space-x-3">
+                <div class="text-right">
+                    <div class="text-sm font-semibold text-light-grey">John Doe</div>
+                    <div class="text-xs text-accent-silver">Shopper</div>
+                </div>
+                <div class="w-8 h-8 bg-gradient-to-br from-steel-blue to-accent-silver rounded-full flex items-center justify-center">
+                    👤
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Points Summary -->
+    <section class="px-4 py-6">
+        <div class="points-card rounded-xl p-6 mb-6">
+            <div class="text-center mb-4">
+                <h2 class="text-2xl font-bold mb-2 metric-highlight">Your Points Balance</h2>
+                <div class="text-5xl font-bold font-mono metric-highlight mb-2" id="points-balance">2,847</div>
+                <div class="tier-badge inline-block mb-2" id="tier-badge">GOLD TIER</div>
+                <p class="text-sm text-accent-silver">Points to next tier: <span id="points-to-next">1,153</span></p>
+            </div>
+            
+            <!-- Progress Ring -->
+            <div class="flex justify-center mb-4">
+                <div class="relative w-24 h-24">
+                    <svg class="progress-ring w-24 h-24">
+                        <circle class="progress-ring-circle stroke-steel-blue" 
+                                stroke-width="4" fill="transparent" r="40" cx="48" cy="48"
+                                style="stroke-dashoffset: 75.36;"/>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-sm font-bold text-light-grey">70%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-4 text-center">
+                <div>
+                    <div class="text-lg font-bold text-success" id="earned-today">+45</div>
+                    <div class="text-xs text-accent-silver">Earned Today</div>
+                </div>
+                <div>
+                    <div class="text-lg font-bold text-info" id="total-earned">2,847</div>
+                    <div class="text-xs text-accent-silver">Total Earned</div>
+                </div>
+                <div>
+                    <div class="text-lg font-bold text-warning" id="redeemed">560</div>
+                    <div class="text-xs text-accent-silver">Redeemed</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Actions -->
+    <section class="px-4 py-4">
+        <h3 class="text-lg font-semibold text-light-grey mb-4">Quick Actions</h3>
+        <div class="grid grid-cols-2 gap-4">
+            <button onclick="uploadReceipt()" class="performance-card rounded-xl p-4 hover-lift text-center">
+                <div class="text-2xl mb-2">📷</div>
+                <div class="text-sm font-medium text-light-grey">Upload Receipt</div>
+                <div class="text-xs text-accent-silver">Earn points</div>
+            </button>
+            <button onclick="viewRewards()" class="performance-card rounded-xl p-4 hover-lift text-center">
+                <div class="text-2xl mb-2">🎁</div>
+                <div class="text-sm font-medium text-light-grey">View Rewards</div>
+                <div class="text-xs text-accent-silver">Redeem points</div>
+            </button>
+        </div>
+    </section>
+
+    <!-- Recent Activity -->
+    <section class="px-4 py-4">
+        <h3 class="text-lg font-semibold text-light-grey mb-4">Recent Activity</h3>
+        <div class="space-y-3" id="recent-activity">
+            <!-- Activity items will be dynamically generated -->
+        </div>
+    </section>
+
+    <!-- Available Rewards -->
+    <section class="px-4 py-4">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-light-grey">Available Rewards</h3>
+            <span class="text-sm text-accent-silver" id="rewards-count">8 rewards</span>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4" id="rewards-grid">
+            <!-- Rewards will be dynamically generated -->
+        </div>
+    </section>
+
+    <!-- Receipt History -->
+    <section class="px-4 py-4 mb-20">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-light-grey">Receipt History</h3>
+            <button onclick="viewAllReceipts()" class="text-sm text-steel-blue hover:underline">View All</button>
+        </div>
+        
+        <div class="space-y-3" id="receipt-history">
+            <!-- Receipt items will be dynamically generated -->
+        </div>
+    </section>
+
+    <!-- Bottom Navigation -->
+    <nav class="nav-bottom fixed bottom-0 left-0 right-0 px-4 py-3 z-50">
+        <div class="flex justify-around">
+            <a href="index.html" class="flex flex-col items-center space-y-1 text-accent-silver hover:text-steel-blue transition-colors">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                </svg>
+                <span class="text-xs">Dashboard</span>
+            </a>
+            <a href="performance.html" class="flex flex-col items-center space-y-1 text-accent-silver hover:text-steel-blue transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                <span class="text-xs">Performance</span>
+            </a>
+            <a href="receipts.html" class="flex flex-col items-center space-y-1 text-accent-silver hover:text-steel-blue transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span class="text-xs">Receipts</span>
+            </a>
+            <a href="brand-portal.html" class="flex flex-col items-center space-y-1 text-accent-silver hover:text-steel-blue transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6"/>
+                </svg>
+                <span class="text-xs">Brand Portal</span>
+            </a>
+        </div>
+    </nav>
+
+    <script>
+        // Shopper Portal JavaScript
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeShopperPortal();
+        });
+
+        function initializeShopperPortal() {
+            loadRecentActivity();
+            loadAvailableRewards();
+            loadReceiptHistory();
+            initializeParticleBackground();
+            
+            // Animate page load
+            anime({
+                targets: '.performance-card, .points-card',
+                opacity: [0, 1],
+                translateY: [20, 0],
+                delay: anime.stagger(100),
+                duration: 800,
+                easing: 'easeOutQuart'
+            });
+        }
+
+        function loadRecentActivity() {
+            const activities = [
+                {
+                    type: 'earned',
+                    description: 'Earned 45 points from OMO purchase',
+                    time: '2 hours ago',
+                    points: '+45',
+                    icon: '➕'
+                },
+                {
+                    type: 'redeemed',
+                    description: 'Redeemed 200 points for airtime',
+                    time: '1 day ago',
+                    points: '-200',
+                    icon: '➖'
+                },
+                {
+                    type: 'tier',
+                    description: 'Upgraded to Gold Tier',
+                    time: '3 days ago',
+                    points: '🏆',
+                    icon: '🏆'
+                },
+                {
+                    type: 'gift',
+                    description: 'Received 100 points from friend',
+                    time: '5 days ago',
+                    points: '+100',
+                    icon: '🎁'
+                }
+            ];
+            
+            const container = document.getElementById('recent-activity');
+            container.innerHTML = '';
+            
+            activities.forEach(activity => {
+                const activityElement = createActivityItem(activity);
+                container.appendChild(activityElement);
+            });
+        }
+
+        function createActivityItem(activity) {
+            const item = document.createElement('div');
+            item.className = 'performance-card rounded-lg p-3 hover-lift';
+            
+            const pointsColor = activity.type === 'earned' || activity.type === 'gift' ? 'text-success' :
+                               activity.type === 'redeemed' ? 'text-error' : 'text-info';
+            
+            item.innerHTML = `
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-steel-blue rounded-full flex items-center justify-center text-sm">
+                        ${activity.icon}
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-sm text-light-grey">${activity.description}</div>
+                        <div class="text-xs text-accent-silver">${activity.time}</div>
+                    </div>
+                    <div class="text-sm font-mono ${pointsColor}">${activity.points}</div>
+                </div>
+            `;
+            
+            return item;
+        }
+
+        function loadAvailableRewards() {
+            const rewards = [
+                {
+                    name: 'Airtime Voucher',
+                    points: 200,
+                    value: 'KES 100',
+                    icon: '📱',
+                    available: true
+                },
+                {
+                    name: 'Shopping Voucher',
+                    points: 500,
+                    value: 'KES 250',
+                    icon: '🛒',
+                    available: true
+                },
+                {
+                    name: 'Data Bundle',
+                    points: 300,
+                    value: '2GB',
+                    icon: '📶',
+                    available: false
+                },
+                {
+                    name: 'Movie Ticket',
+                    points: 400,
+                    value: '1 Ticket',
+                    icon: '🎬',
+                    available: true
+                },
+                {
+                    name: 'Coffee Voucher',
+                    points: 150,
+                    value: 'Free Coffee',
+                    icon: '☕',
+                    available: true
+                },
+                {
+                    name: 'Fuel Voucher',
+                    points: 1000,
+                    value: 'KES 500',
+                    icon: '⛽',
+                    available: false
+                },
+                {
+                    name: 'Uber Voucher',
+                    points: 600,
+                    value: 'KES 300',
+                    icon: '🚗',
+                    available: true
+                },
+                {
+                    name: 'Restaurant Voucher',
+                    points: 800,
+                    value: 'KES 400',
+                    icon: '🍽️',
+                    available: false
+                }
+            ];
+            
+            const container = document.getElementById('rewards-grid');
+            container.innerHTML = '';
+            
+            rewards.forEach(reward => {
+                const rewardElement = createRewardItem(reward);
+                container.appendChild(rewardElement);
+            });
+        }
+
+        function createRewardItem(reward) {
+            const item = document.createElement('div');
+            item.className = `performance-card rounded-xl p-4 hover-lift ${reward.available ? 'cursor-pointer' : 'opacity-50'}`;
+            if (reward.available) {
+                item.onclick = () => redeemReward(reward);
+            }
+            
+            const availabilityClass = reward.available ? 'text-success' : 'text-error';
+            const availabilityText = reward.available ? 'Available' : 'Need More Points';
+            
+            item.innerHTML = `
+                <div class="text-center">
+                    <div class="text-3xl mb-2">${reward.icon}</div>
+                    <div class="text-sm font-medium text-light-grey mb-1">${reward.name}</div>
+                    <div class="text-xs text-accent-silver mb-2">${reward.value}</div>
+                    <div class="text-sm font-mono metric-highlight">${reward.points} pts</div>
+                    <div class="text-xs ${availabilityClass} mt-1">${availabilityText}</div>
+                </div>
+            `;
+            
+            return item;
+        }
+
+        function loadReceiptHistory() {
+            const receipts = [
+                {
+                    store: 'Naivas Supermarket',
+                    date: '2025-11-10',
+                    amount: 'KES 1,645',
+                    points: '+45',
+                    items: ['OMO', 'Coca Cola', 'Bread']
+                },
+                {
+                    store: 'Quickmart CBD',
+                    date: '2025-11-08',
+                    amount: 'KES 890',
+                    points: '+28',
+                    items: ['Geisha', 'Pepsi', 'Milk']
+                },
+                {
+                    store: 'Carrefour Two Rivers',
+                    date: '2025-11-05',
+                    amount: 'KES 2,340',
+                    points: '+67',
+                    items: ['OMO', 'Colgate', 'Nivea', 'Kiwi']
+                }
+            ];
+            
+            const container = document.getElementById('receipt-history');
+            container.innerHTML = '';
+            
+            receipts.forEach(receipt => {
+                const receiptElement = createReceiptItem(receipt);
+                container.appendChild(receiptElement);
+            });
+        }
+
+        function createReceiptItem(receipt) {
+            const item = document.createElement('div');
+            item.className = 'receipt-item performance-card rounded-lg p-3 hover-lift cursor-pointer';
+            item.onclick = () => viewReceiptDetails(receipt);
+            
+            item.innerHTML = `
+                <div class="flex items-center justify-between mb-2">
+                    <div class="font-medium text-light-grey">${receipt.store}</div>
+                    <div class="text-sm font-mono text-success">${receipt.points}</div>
+                </div>
+                <div class="flex items-center justify-between mb-2">
+                    <div class="text-sm text-accent-silver">${receipt.date}</div>
+                    <div class="text-sm font-mono text-light-grey">${receipt.amount}</div>
+                </div>
+                <div class="text-xs text-accent-silver">
+                    Items: ${receipt.items.join(', ')}
+                </div>
+            `;
+            
+            return item;
+        }
+
+        function uploadReceipt() {
+            showToast('Receipt upload feature coming soon!', 'info');
+        }
+
+        function viewRewards() {
+            showToast('Rewards catalog opened', 'info');
+        }
+
+        function redeemReward(reward) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center px-4';
+            modal.innerHTML = `
+                <div class="glass-effect rounded-xl p-6 w-full max-w-md">
+                    <div class="text-center mb-4">
+                        <div class="text-4xl mb-2">${reward.icon}</div>
+                        <h3 class="text-lg font-semibold text-light-grey">${reward.name}</h3>
+                        <p class="text-sm text-accent-silver">${reward.value}</p>
+                    </div>
+                    
+                    <div class="text-center mb-6">
+                        <div class="text-2xl font-bold font-mono metric-highlight">${reward.points} Points</div>
+                        <p class="text-sm text-accent-silver">Required to redeem</p>
+                    </div>
+                    
+                    <div class="space-y-3 mb-6">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-accent-silver">Current Balance:</span>
+                            <span class="text-light-grey font-mono">2,847 pts</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-accent-silver">After Redemption:</span>
+                            <span class="text-light-grey font-mono">${2847 - reward.points} pts</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex space-x-3">
+                        <button onclick="this.closest('.fixed').remove()" 
+                                class="flex-1 px-4 py-2 bg-medium-grey rounded-lg text-sm font-medium hover:bg-accent-silver hover:text-primary-bg transition-all">
+                            Cancel
+                        </button>
+                        <button onclick="confirmRedemption('${reward.name}', ${reward.points})" 
+                                class="flex-1 px-4 py-2 bg-steel-blue rounded-lg text-sm font-medium hover:silver-glow transition-all">
+                            Redeem
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Animate modal appearance
+            anime({
+                targets: modal.querySelector('.glass-effect'),
+                opacity: [0, 1],
+                scale: [0.9, 1],
+                duration: 300,
+                easing: 'easeOutQuart'
+            });
+        }
+
+        function confirmRedemption(rewardName, points) {
+            showToast(`Successfully redeemed ${rewardName}!`, 'success');
+            document.querySelector('.fixed').remove();
+            
+            // Update points balance
+            const currentBalance = parseInt(document.getElementById('points-balance').textContent);
+            const newBalance = currentBalance - points;
+            document.getElementById('points-balance').textContent = newBalance.toLocaleString();
+            
+            // Update redeemed points
+            const currentRedeemed = parseInt(document.getElementById('redeemed').textContent);
+            document.getElementById('redeemed').textContent = currentRedeemed + points;
+        }
+
+        function viewReceiptDetails(receipt) {
+            showToast(`Viewing receipt from ${receipt.store}`, 'info');
+        }
+
+        function viewAllReceipts() {
+            showToast('Opening full receipt history...', 'info');
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-20 right-4 px-4 py-3 rounded-lg text-white text-sm font-medium z-50 ${
+                type === 'success' ? 'bg-success' :
+                type === 'warning' ? 'bg-warning' :
+                type === 'error' ? 'bg-error' : 'bg-info'
+            }`;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            anime({
+                targets: toast,
+                opacity: [0, 1],
+                translateX: [100, 0],
+                duration: 300,
+                easing: 'easeOutQuart'
+            });
+            
+            setTimeout(() => {
+                anime({
+                    targets: toast,
+                    opacity: [1, 0],
+                    translateX: [0, 100],
+                    duration: 300,
+                    easing: 'easeInQuart',
+                    complete: () => toast.remove()
+                });
+            }, 3000);
+        }
+
+        function initializeParticleBackground() {
+            new p5((p) => {
+                let particles = [];
+                
+                p.setup = function() {
+                    const canvas = p.createCanvas(p.windowWidth, p.windowHeight);
+                    canvas.parent('particles-bg');
+                    
+                    for (let i = 0; i < 35; i++) {
+                        particles.push({
+                            x: p.random(p.width),
+                            y: p.random(p.height),
+                            vx: p.random(-0.2, 0.2),
+                            vy: p.random(-0.2, 0.2),
+                            size: p.random(1, 2)
+                        });
+                    }
+                };
+                
+                p.draw = function() {
+                    p.clear();
+                    
+                    particles.forEach(particle => {
+                        particle.x += particle.vx;
+                        particle.y += particle.vy;
+                        
+                        if (particle.x < 0) particle.x = p.width;
+                        if (particle.x > p.width) particle.x = 0;
+                        if (particle.y < 0) particle.y = p.height;
+                        if (particle.y > p.height) particle.y = 0;
+                        
+                        p.fill(192, 192, 192, 80);
+                        p.noStroke();
+                        p.circle(particle.x, particle.y, particle.size);
+                    });
+                };
+                
+                p.windowResized = function() {
+                    p.resizeCanvas(p.windowWidth, p.windowHeight);
+                };
+            });
+        }
+    </script>
+</body>
+</html>
